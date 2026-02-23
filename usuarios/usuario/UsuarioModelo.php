@@ -5,15 +5,35 @@ require_once ('../../mjolnir/conexion/gestor_consultas.php');
 class UsuarioModelo {
 
     public static function crear($datos) {
-        $identificacion = $datos['identificacion'];
+        $camposRequeridos = [
+            'id_cargo',
+            'nombre',
+            'correo',
+            'celular',
+            'contrasena'
+        ];
 
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['identificacion' => $identificacion]);
+        foreach ($camposRequeridos as $campo) {
+            if (empty($datos[$campo])) {
+                http_response_code(400);
+                return ['success' => false, 'message' => "Falta el campo requerido: $campo"];
+            }
+        }
+
+        $celular = $datos['celular'];
+        $datos['contrasena'] = password_hash(
+            $datos['contrasena'],
+            PASSWORD_DEFAULT
+        );
+        $datos['activo'] = '1';
+
+        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['celular' => $celular]);
         $stmt = ejecutarQuery($sql, $parametros);
         $usuarios = procesarResultado($stmt, 'SELECT');
 
         if (!empty($usuarios)) {
             http_response_code(409);
-            return ['success' => false, 'message' => 'Ya existe un usuario con esa identificación'];
+            return ['success' => false, 'message' => 'Ya existe un usuario con ese celular'];
         }
 
         list($sql, $parametros) = construirQuery('usuario', $datos, 'INSERT');
@@ -29,12 +49,8 @@ class UsuarioModelo {
 
     public static function modificar($id, $datos) {
         $camposValidos = [
-            'id',
-            'tipo_identificacion',
-            'identificacion',
-            'rol',
+            'id_cargo',
             'nombre',
-            'apellido',
             'correo',
             'celular',
             'contrasena'

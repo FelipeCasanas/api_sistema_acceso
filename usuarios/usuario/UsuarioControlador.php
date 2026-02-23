@@ -4,14 +4,9 @@ require_once('UsuarioModelo.php');
 class UsuarioControlador {
 
     public static function crear($datos) {
-        if (empty($datos['identificacion'])) {
+        if (empty($datos['celular'])) {
             http_response_code(400);
-            return ['success' => false, 'message' => 'Falta el campo "identificacion"'];
-        }
-    
-        if (empty($datos['correo'])) {
-            http_response_code(400);
-            return ['success' => false, 'message' => 'Falta el campo "correo"'];
+            return ['success' => false, 'message' => 'Falta el campo "celular"'];
         }
 
         return UsuarioModelo::crear($datos);

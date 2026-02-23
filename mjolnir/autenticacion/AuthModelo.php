@@ -4,18 +4,18 @@ require_once('../../mjolnir/conexion/gestor_consultas.php');
 
 class AuthModelo {
 
-    public static function login($correo, $contrasena) {
+    public static function login($identificacion) {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['correo' => $correo]);
+        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['identificacion' => $identificacion]);
         $stmt = ejecutarQuery($sql, $parametros);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$usuario || !password_verify($contrasena, $usuario['contrasena'])) {
+        if (!$usuario) {
             http_response_code(401);
-            return ['success' => false, 'message' => 'Correo o contraseña incorrectos'];
+            return ['success' => false, 'message' => 'identificacion incorrecta'];
         }
 
         if (!$usuario['activo']) {
@@ -23,12 +23,10 @@ class AuthModelo {
             return ['success' => false, 'message' => 'Usuario inactivo'];
         }
 
-        // Crear sesión
         $_SESSION['usuario'] = [
             'id' => $usuario['id'],
             'nombre' => $usuario['nombre'],
-            'correo' => $usuario['correo'],
-            'rol' => $usuario['rol'] ?? null
+            'identificacion' => $usuario['identificacion']
         ];
 
         return [

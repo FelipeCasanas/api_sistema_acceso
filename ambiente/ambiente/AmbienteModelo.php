@@ -1,47 +1,75 @@
 <?php
-require_once ('../../mjolnir/conexion/conectar.php');
-require_once ('../../mjolnir/conexion/gestor_consultas.php');
+require_once('../../mjolnir/conexion/conectar.php');
+require_once('../../mjolnir/conexion/gestor_consultas.php');
 
-class AmbienteModelo {
+class AmbienteModelo
+{
 
-    public static function crear($datos) {
+    public static function crear($datos)
+    {
+
         $registro = [
-            'id_creador'   => $datos['id_creador'],
-            'id_responsable' => $datos['id_responsable'],
-            'activo'       => '1',
-            'fecha_creacion' => date('Y-m-d H:i:s')
+            'id_creador'      => $datos['id_creador'],
+            'id_responsable'  => $datos['id_responsable'],
+            'activo'          => '1',
+            'fecha_creacion'  => date('Y-m-d H:i:s')
         ];
 
         list($sql, $params) = construirQuery('ambiente', $registro, 'INSERT');
-        $resultado = ejecutarQuery($sql, $params);
+        $stmt = ejecutarQuery($sql, $params);
 
-        return $resultado
+        return $stmt
             ? ['success' => true, 'message' => 'Ambiente creado exitosamente']
             : ['success' => false, 'message' => 'Error al crear ambiente'];
     }
 
-    public static function modificar($datos) {
+
+    public static function modificar($datos)
+    {
+
+        $camposValidos = [
+            'id_creador',
+            'id_responsable'
+        ];
+
+        $datosFiltrados = [];
         $id = $datos['id'];
-        unset($datos['id']);
 
-        list($sql, $params) = construirQuery('ambiente', $datos, 'UPDATE', ['id' => $id]);
-        $resultado = ejecutarQuery($sql, $params);
+        foreach ($camposValidos as $campo) {
+            if (!empty($datos[$campo])) {
+                $datosFiltrados[$campo] = $datos[$campo];
+            }
+        }
 
-        return $resultado
+        if (empty($datosFiltrados)) {
+            http_response_code(400);
+            return ['success' => false, 'message' => 'No se enviaron datos para actualizar'];
+        }
+
+        list($sql, $params) = construirQuery('ambiente', $datosFiltrados, 'UPDATE', ['id' => $id]);
+        $stmt = ejecutarQuery($sql, $params);
+
+        return $stmt
             ? ['success' => true, 'message' => 'Ambiente actualizado correctamente']
             : ['success' => false, 'message' => 'Error al actualizar'];
     }
 
-    public static function eliminar($id) {
-        list($sql, $params) = construirQuery('ambiente', ['activo' => '0'], 'UPDATE', ['id' => $id]);
-        $resultado = ejecutarQuery($sql, $params);
 
-        return $resultado
-            ? ['success' => true, 'message' => 'Ambiente eliminado (inactivo)']
+    public static function eliminar($id)
+    {
+
+        list($sql, $params) = construirQuery('ambiente', ['activo' => '0'], 'UPDATE', ['id' => $id]);
+        $stmt = ejecutarQuery($sql, $params);
+
+        return $stmt
+            ? ['success' => true, 'message' => 'Ambiente eliminado']
             : ['success' => false, 'message' => 'Error al eliminar'];
     }
 
-    public static function obtener($filtros = []) {
+
+    public static function obtener($filtros = [])
+    {
+
         $condiciones = ['activo' => '1'];
 
         if (!empty($filtros['id'])) {
@@ -51,11 +79,11 @@ class AmbienteModelo {
         list($sql, $params) = construirQuery('ambiente', [], 'SELECT', $condiciones);
         $sql .= " ORDER BY fecha_creacion DESC";
 
-        $resultado = ejecutarQuery($sql, $params);
+        $stmt = ejecutarQuery($sql, $params);
         $resultados = [];
 
-        while ($fila = $resultado->fetch(PDO::FETCH_ASSOC)) {
-            $resultados[] = json_decode($fila, true);
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $resultados[] = $fila;
         }
 
         return [

@@ -4,12 +4,12 @@ require_once('AuthModelo.php');
 class AuthControlador {
 
     public static function login($datos) {
-        if (empty($datos['correo']) || empty($datos['contrasena'])) {
+        if (empty($datos['identificacion'])) {
             http_response_code(400);
-            return ['success' => false, 'message' => 'Faltan campos obligatorios'];
+            return ['success' => false, 'message' => 'Falta el campo obligatorio "identificacion"'];
         }
 
-        return AuthModelo::login($datos['correo'], $datos['contrasena']);
+        return AuthModelo::login($datos['identificacion']);
     }
 
     public static function verificarSesion($datos) {

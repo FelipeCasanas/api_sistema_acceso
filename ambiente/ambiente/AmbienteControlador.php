@@ -1,9 +1,11 @@
 <?php
-require_once ('AmbienteModelo.php');
+require_once('AmbienteModelo.php');
 
-class AmbienteControlador {
+class AmbienteControlador
+{
 
-    public static function crear($datos) {
+    public static function crear($datos)
+    {
         if (empty($datos['id_creador']) || !isset($datos['id_responsable'])) {
             http_response_code(400);
             return ['success' => false, 'message' => 'Faltan datos obligatorios'];
@@ -12,7 +14,8 @@ class AmbienteControlador {
         return AmbienteModelo::crear($datos);
     }
 
-    public static function modificar($datos) {
+    public static function modificar($datos)
+    {
         if (empty($datos['id'])) {
             http_response_code(400);
             return ['success' => false, 'message' => 'Falta el ID del ambiente'];
@@ -21,7 +24,8 @@ class AmbienteControlador {
         return AmbienteModelo::modificar($datos);
     }
 
-    public static function eliminar($id) {
+    public static function eliminar($id)
+    {
         if (!$id) {
             http_response_code(400);
             return ['success' => false, 'message' => 'Falta el ID del ambiente'];
@@ -30,7 +34,8 @@ class AmbienteControlador {
         return AmbienteModelo::eliminar($id);
     }
 
-    public static function obtener($filtros = []) {
+    public static function obtener($filtros = [])
+    {
         return AmbienteModelo::obtener($filtros);
     }
 }
