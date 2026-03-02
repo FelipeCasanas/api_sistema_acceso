@@ -17,7 +17,7 @@ $datos = json_decode(file_get_contents("php://input"), true) ?? [];
 switch ($metodo) {
 
     case 'GET':
-            echo json_encode(ImagenControlador::obtener($_GET['id']));
+            echo json_encode(ImagenControlador::obtener(isset($_GET['id']) ? $_GET['id'] : null));
         break;
 
     case 'POST':

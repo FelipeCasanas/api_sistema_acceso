@@ -1,12 +1,12 @@
 <?php
-require_once ('../../mjolnir/conexion/conectar.php');
-require_once ('../../mjolnir/conexion/gestor_consultas.php');
+require_once ('../mjolnir/conexion/conectar.php');
+require_once ('../mjolnir/conexion/gestor_consultas.php');
 
 class RegistroModelo {
 
     public static function obtener($filtros = []) {
         list($sql, $params) = construirQuery('registro', [], 'SELECT', $filtros);
-        $sql .= " ORDER BY fecha DESC";
+        $sql .= " ORDER BY fecha_registro DESC";
 
         $stmt = ejecutarQuery($sql, $params);
         $resultados = [];

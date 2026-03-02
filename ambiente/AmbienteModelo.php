@@ -1,6 +1,6 @@
 <?php
-require_once('../../mjolnir/conexion/conectar.php');
-require_once('../../mjolnir/conexion/gestor_consultas.php');
+require_once('../mjolnir/conexion/conectar.php');
+require_once('../mjolnir/conexion/gestor_consultas.php');
 
 class AmbienteModelo {
     

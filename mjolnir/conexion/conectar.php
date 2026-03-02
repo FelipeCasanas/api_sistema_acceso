@@ -1,7 +1,7 @@
 <?php
 function obtenerConexion() {
     $host = 'localhost';
-    $dbname = 'sistema_acceso';
+    $dbname = 'etherium';
     $usuario = 'root';
     $contrasena = '';
 
