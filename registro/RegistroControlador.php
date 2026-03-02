@@ -1,7 +1,11 @@
 <?php
-require_once 'RegistroRegistroModelo.php';
+require_once 'RegistroModelo.php';
 
-class RegistroRegistroControlador {
+class RegistroControlador {
+
+    public static function obtener($filtros = []) {
+        return RegistroModelo::obtener($filtros);
+    }
 
     public static function registrar($datos) {
         $campos = ['registrado_por', 'id_elemento', 'tipo_registro', 'descripcion'];
@@ -12,10 +16,6 @@ class RegistroRegistroControlador {
             }
         }
 
-        return RegistroRegistroModelo::registrar($datos);
-    }
-
-    public static function obtener($filtros = []) {
-        return RegistroRegistroModelo::obtener($filtros);
+        return RegistroModelo::registrar($datos);
     }
 }

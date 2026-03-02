@@ -3,10 +3,23 @@ require_once('UsuarioModelo.php');
 
 class UsuarioControlador {
 
-    public static function crear($datos) {
-        if (empty($datos['celular'])) {
+    public static function obtenerUno($id_usuario) {
+        if (!$id_usuario) {
             http_response_code(400);
-            return ['success' => false, 'message' => 'Falta el campo "celular"'];
+            return ['success' => false, 'message' => 'No se recibió el ID del usuario'];
+        }
+
+        return UsuarioModelo::obtenerUno($id_usuario);
+    }
+    
+    public static function obtenerTodos() {
+        return UsuarioModelo::obtenerTodos();
+    }
+    
+    public static function crear($datos) {
+        if (empty($datos['identificacion'])) {
+            http_response_code(400);
+            return ['success' => false, 'message' => 'Falta el campo "identificacion"'];
         }
 
         return UsuarioModelo::crear($datos);
@@ -28,18 +41,5 @@ class UsuarioControlador {
         }
 
         return UsuarioModelo::eliminar($id_usuario);
-    }
-
-    public static function obtenerTodos() {
-        return UsuarioModelo::obtenerTodos();
-    }
-
-    public static function obtenerUno($id_usuario) {
-        if (!$id_usuario) {
-            http_response_code(400);
-            return ['success' => false, 'message' => 'No se recibió el ID del usuario'];
-        }
-
-        return UsuarioModelo::obtenerUno($id_usuario);
     }
 }

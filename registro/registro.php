@@ -1,17 +1,18 @@
 <?php
 header('Content-Type: application/json');
-require_once('ActualizacionAmbienteControlador.php');
+require_once 'RegistroControlador.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $data = json_decode(file_get_contents("php://input"), true) ?? [];
 
 switch ($method) {
-    case 'POST':
-        echo json_encode(ActualizacionAmbienteControlador::registrar($data));
-        break;
 
     case 'GET':
-        echo json_encode(ActualizacionAmbienteControlador::obtener($_GET));
+        echo json_encode(RegistroControlador::obtener($_GET));
+        break;
+        
+    case 'POST':
+        echo json_encode(RegistroControlador::registrar($data));
         break;
 
     default:

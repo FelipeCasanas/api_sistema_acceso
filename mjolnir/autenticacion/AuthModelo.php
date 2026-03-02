@@ -4,6 +4,22 @@ require_once('../../mjolnir/conexion/gestor_consultas.php');
 
 class AuthModelo {
 
+    public static function verificarSesion($token) {
+        if (session_id() !== $token) session_id($token);
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (empty($_SESSION['usuario'])) {
+            http_response_code(401);
+            return ['success' => false, 'message' => 'Sesión no iniciada'];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Sesión activa',
+            'data' => $_SESSION['usuario']
+        ];
+    }
+
     public static function login($identificacion) {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -34,23 +50,6 @@ class AuthModelo {
             'message' => 'Inicio de sesión exitoso',
             'data' => $_SESSION['usuario'],
             'session_token' => session_id()
-        ];
-    }
-
-
-    public static function verificarSesion($token) {
-        if (session_id() !== $token) session_id($token);
-        if (session_status() === PHP_SESSION_NONE) session_start();
-
-        if (empty($_SESSION['usuario'])) {
-            http_response_code(401);
-            return ['success' => false, 'message' => 'Sesión no iniciada'];
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Sesión activa',
-            'data' => $_SESSION['usuario']
         ];
     }
 

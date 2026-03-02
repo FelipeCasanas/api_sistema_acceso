@@ -2,17 +2,42 @@
 require_once('../../mjolnir/conexion/conectar.php');
 require_once('../../mjolnir/conexion/gestor_consultas.php');
 
-class AmbienteModelo
-{
+class AmbienteModelo {
+    
+    public static function obtener($filtros = [])
+    {
+
+        $condiciones = ['activo' => '1'];
+
+        if (!empty($filtros['id'])) {
+            $condiciones['id'] = $filtros['id'];
+        }
+
+        list($sql, $params) = construirQuery('ambiente', [], 'SELECT', $condiciones);
+        $sql .= " ORDER BY fecha_creacion DESC";
+
+        $stmt = ejecutarQuery($sql, $params);
+        $resultados = [];
+
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $resultados[] = $fila;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Ambientes obtenidos correctamente',
+            'data' => $resultados
+        ];
+    }
 
     public static function crear($datos)
     {
 
         $registro = [
             'id_creador'      => $datos['id_creador'],
-            'id_responsable'  => $datos['id_responsable'],
-            'activo'          => '1',
-            'fecha_creacion'  => date('Y-m-d H:i:s')
+            'bloque'  => $datos['bloque'],
+            'sitio'  => $datos['sitio'],
+            'activo'          => '1'
         ];
 
         list($sql, $params) = construirQuery('ambiente', $registro, 'INSERT');
@@ -29,7 +54,8 @@ class AmbienteModelo
 
         $camposValidos = [
             'id_creador',
-            'id_responsable'
+            'bloque',
+            'sitio',
         ];
 
         $datosFiltrados = [];
@@ -64,32 +90,5 @@ class AmbienteModelo
         return $stmt
             ? ['success' => true, 'message' => 'Ambiente eliminado']
             : ['success' => false, 'message' => 'Error al eliminar'];
-    }
-
-
-    public static function obtener($filtros = [])
-    {
-
-        $condiciones = ['activo' => '1'];
-
-        if (!empty($filtros['id'])) {
-            $condiciones['id'] = $filtros['id'];
-        }
-
-        list($sql, $params) = construirQuery('ambiente', [], 'SELECT', $condiciones);
-        $sql .= " ORDER BY fecha_creacion DESC";
-
-        $stmt = ejecutarQuery($sql, $params);
-        $resultados = [];
-
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $resultados[] = $fila;
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Ambientes obtenidos correctamente',
-            'data' => $resultados
-        ];
     }
 }

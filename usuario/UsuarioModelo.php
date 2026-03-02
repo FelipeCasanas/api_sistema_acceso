@@ -4,9 +4,47 @@ require_once ('../../mjolnir/conexion/gestor_consultas.php');
 
 class UsuarioModelo {
 
+    public static function obtenerTodos() {
+        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['activo' => '1']);
+        $stmt = ejecutarQuery($sql, $parametros);
+
+        $usuarios = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            unset($row['contrasena']);
+            $usuarios[] = $row;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Usuarios activos obtenidos correctamente',
+            'data' => $usuarios
+        ];
+    }
+
+    public static function obtenerUno($id) {
+        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['id' => $id]);
+        $stmt = ejecutarQuery($sql, $parametros);
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$usuario) {
+            http_response_code(404);
+            return ['success' => false, 'message' => 'Usuario no encontrado'];
+        }
+
+        unset($usuario['contrasena']);
+
+        return [
+            'success' => true,
+            'message' => 'Información del usuario obtenida',
+            'data' => $usuario
+        ];
+    }
+    
     public static function crear($datos) {
         $camposRequeridos = [
-            'id_cargo',
+            'tipo_identificacion',
+            'identificacion',
+            'cargo',
             'nombre',
             'correo',
             'celular',
@@ -20,20 +58,20 @@ class UsuarioModelo {
             }
         }
 
-        $celular = $datos['celular'];
+        $identificacion = $datos['identificacion'];
         $datos['contrasena'] = password_hash(
             $datos['contrasena'],
             PASSWORD_DEFAULT
         );
         $datos['activo'] = '1';
 
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['celular' => $celular]);
+        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['identificacion' => $identificacion]);
         $stmt = ejecutarQuery($sql, $parametros);
         $usuarios = procesarResultado($stmt, 'SELECT');
 
         if (!empty($usuarios)) {
             http_response_code(409);
-            return ['success' => false, 'message' => 'Ya existe un usuario con ese celular'];
+            return ['success' => false, 'message' => 'Ya existe un usuario con esa identificacion'];
         }
 
         list($sql, $parametros) = construirQuery('usuario', $datos, 'INSERT');
@@ -49,7 +87,9 @@ class UsuarioModelo {
 
     public static function modificar($id, $datos) {
         $camposValidos = [
-            'id_cargo',
+            'tipo_identificacion',
+            'identificacion',
+            'cargo',
             'nombre',
             'correo',
             'celular',
@@ -105,42 +145,6 @@ class UsuarioModelo {
         return [
             'success' => $stmt->rowCount() > 0,
             'message' => $stmt->rowCount() > 0 ? 'Usuario eliminado correctamente' : 'No se realizaron cambios'
-        ];
-    }
-
-    public static function obtenerTodos() {
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['activo' => '1']);
-        $stmt = ejecutarQuery($sql, $parametros);
-
-        $usuarios = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            unset($row['contrasena']);
-            $usuarios[] = $row;
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Usuarios activos obtenidos correctamente',
-            'data' => $usuarios
-        ];
-    }
-
-    public static function obtenerUno($id) {
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['id' => $id]);
-        $stmt = ejecutarQuery($sql, $parametros);
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$usuario) {
-            http_response_code(404);
-            return ['success' => false, 'message' => 'Usuario no encontrado'];
-        }
-
-        unset($usuario['contrasena']);
-
-        return [
-            'success' => true,
-            'message' => 'Información del usuario obtenida',
-            'data' => $usuario
         ];
     }
 }

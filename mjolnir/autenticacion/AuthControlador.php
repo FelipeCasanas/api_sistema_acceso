@@ -3,6 +3,11 @@ require_once('AuthModelo.php');
 
 class AuthControlador {
 
+    public static function verificarSesion($datos) {
+        $token = $datos['session_token'] ?? session_id();
+        return AuthModelo::verificarSesion($token);
+    }
+
     public static function login($datos) {
         if (empty($datos['identificacion'])) {
             http_response_code(400);
@@ -10,11 +15,6 @@ class AuthControlador {
         }
 
         return AuthModelo::login($datos['identificacion']);
-    }
-
-    public static function verificarSesion($datos) {
-        $token = $datos['session_token'] ?? session_id();
-        return AuthModelo::verificarSesion($token);
     }
 
     public static function logout() {

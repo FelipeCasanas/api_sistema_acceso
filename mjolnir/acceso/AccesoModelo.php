@@ -4,25 +4,6 @@ require_once('../../mjolnir/conexion/gestor_consultas.php');
 
 class AccesoModelo {
 
-    public static function registrar($datos) {
-        $acceso = [
-            'id_usuario' => $datos['id_usuario'],
-            'ip' => $datos['ip'],
-            'medio_acceso' => $datos['medio_acceso'],
-            'fecha_acceso' => date('Y-m-d H:i:s')
-        ];
-
-        list($sql, $params) = construirQuery('acceso', $acceso, 'INSERT');
-        $stmt = ejecutarQuery($sql, $params);
-
-        if ($stmt) {
-            return ['success' => true, 'message' => 'Acceso registrado exitosamente'];
-        } else {
-            http_response_code(500);
-            return ['success' => false, 'message' => 'Error al registrar el acceso'];
-        }
-    }
-
     public static function obtener() {
         list($sql, $params) = construirQuery('acceso', [], 'SELECT', []);
         $sql .= " ORDER BY fecha_acceso DESC";
@@ -39,5 +20,22 @@ class AccesoModelo {
             'message' => 'Accesos obtenidos correctamente',
             'data' => $accesos
         ];
+    }
+    
+    public static function registrar($datos) {
+        $acceso = [
+            'android_id' => $datos['android_id'],
+            'medio_acceso' => $datos['medio_acceso']
+        ];
+
+        list($sql, $params) = construirQuery('acceso', $acceso, 'INSERT');
+        $stmt = ejecutarQuery($sql, $params);
+
+        if ($stmt) {
+            return ['success' => true, 'message' => 'Acceso registrado exitosamente'];
+        } else {
+            http_response_code(500);
+            return ['success' => false, 'message' => 'Error al registrar el acceso'];
+        }
     }
 }
