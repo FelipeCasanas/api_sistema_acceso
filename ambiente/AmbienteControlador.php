@@ -3,9 +3,14 @@ require_once('AmbienteModelo.php');
 
 class AmbienteControlador {
 
-    public static function obtener($filtros = [])
+    public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
-        return AmbienteModelo::obtener($filtros);
+        if (!$dato_busqueda) {
+            http_response_code(400);
+            return ['success' => false, 'message' => 'No se recibió el medio de busqueda'];
+        }
+        
+        return AmbienteModelo::obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta);
     }
     
     public static function crear($datos)

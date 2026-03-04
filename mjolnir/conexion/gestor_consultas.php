@@ -1,4 +1,3 @@
-
 <?php
 
 require_once('conectar.php');
@@ -50,8 +49,7 @@ function construirQuery($tabla, $datos = [], $accion = 'INSERT', $condiciones = 
         $placeholders = implode(", ", array_fill(0, count($datos), '?'));
         $sql = "INSERT INTO $tabla ($campos) VALUES ($placeholders)";
         $parametros = array_values($datos);
-    }
-    elseif ($accion === 'UPDATE') {
+    } else if ($accion === 'UPDATE') {
         $set = implode(", ", array_map(fn($campo) => "$campo = ?", array_keys($datos)));
         $sql = "UPDATE $tabla SET $set";
 
@@ -62,8 +60,7 @@ function construirQuery($tabla, $datos = [], $accion = 'INSERT', $condiciones = 
         } else {
             throw new Exception("Se requiere condición para UPDATE");
         }
-    }
-    elseif ($accion === 'DELETE') {
+    } else if ($accion === 'DELETE') {
         $sql = "DELETE FROM $tabla";
 
         if (!empty($condiciones)) {
@@ -73,17 +70,30 @@ function construirQuery($tabla, $datos = [], $accion = 'INSERT', $condiciones = 
         } else {
             throw new Exception("Se requiere condición para DELETE");
         }
-    }
-    elseif ($accion === 'SELECT') {
+    } else if ($accion === 'SELECT') {
         $sql = "SELECT * FROM $tabla";
 
         if (!empty($condiciones)) {
-            $where = implode(" AND ", array_map(fn($campo) => "$campo = ?", array_keys($condiciones)));
+
+            $wherePartes = [];
+            $parametros = [];
+
+            foreach ($condiciones as $campo => $valor) {
+
+                if (is_array($valor)) {
+                    $operador = strtoupper($valor[0]);
+                    $wherePartes[] = "$campo $operador ?";
+                    $parametros[] = $valor[1];
+                } else {
+                    $wherePartes[] = "$campo = ?";
+                    $parametros[] = $valor;
+                }
+            }
+
+            $where = implode(" AND ", $wherePartes);
             $sql .= " WHERE $where";
-            $parametros = array_values($condiciones);
         }
-    }
-    else {
+    } else {
         throw new Exception("Acción no soportada: $accion");
     }
 
@@ -105,9 +115,9 @@ function ejecutarQuery($sql, $parametros) {
 function procesarResultado($stmt, $tipo = 'INSERT') {
     if ($tipo === 'INSERT') {
         return $stmt->connection->lastInsertId();
-    } elseif ($tipo === 'SELECT') {
+    } else if ($tipo === 'SELECT') {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } elseif ($tipo === 'UPDATE' || $tipo === 'DELETE') {
+    } else if ($tipo === 'UPDATE' || $tipo === 'DELETE') {
         return $stmt->rowCount();
     }
 }

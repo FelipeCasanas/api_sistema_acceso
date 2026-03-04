@@ -4,8 +4,8 @@ require_once ('../mjolnir/conexion/gestor_consultas.php');
 
 class RegistroModelo {
 
-    public static function obtener($filtros = []) {
-        list($sql, $params) = construirQuery('registro', [], 'SELECT', $filtros);
+    public static function obtener($medio_busqueda, $dato_busqueda) {
+        list($sql, $params) = construirQuery('registro', [], 'SELECT', [$medio_busqueda => $dato_busqueda]);
         $sql .= " ORDER BY fecha_registro DESC";
 
         $stmt = ejecutarQuery($sql, $params);

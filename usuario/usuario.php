@@ -16,7 +16,11 @@ $datos = json_decode(file_get_contents("php://input"), true) ?? [];
 switch ($metodo) {
     case 'GET':
         if (isset($_GET['id'])) {
-            echo json_encode(UsuarioControlador::obtenerUno($_GET['id']));
+            echo json_encode(UsuarioControlador::obtener('id', $_GET['id'], true));
+        } else if(isset($_GET['nombre'])) {
+            echo json_encode(UsuarioControlador::obtener('nombre', $_GET['nombre'], $_GET['coincidencia_exacta'] ?? true));
+        } else if(isset($_GET['identificacion'])) {
+            echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
         } else {
             echo json_encode(UsuarioControlador::obtenerTodos());
         }

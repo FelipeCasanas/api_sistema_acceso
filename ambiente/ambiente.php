@@ -7,7 +7,15 @@ $data = json_decode(file_get_contents("php://input"), true) ?? [];
 
 switch ($method) {
     case 'GET':
-        echo json_encode(AmbienteControlador::obtener($_GET));
+        if(isset($_GET['id'])) {
+            echo json_encode(AmbienteControlador::obtener('id', $_GET['id'], true));
+        } else if(isset($_GET['bloque'])) {
+            echo json_encode(AmbienteControlador::obtener('bloque', $_GET['bloque'], $_GET['coincidencia_exacta'] ?? true));
+        } else if(isset($_GET['sitio'])) {
+            echo json_encode(AmbienteControlador::obtener('sitio', $_GET['sitio'], $_GET['coincidencia_exacta'] ?? true));
+        } else {
+            return json_encode(['success' => false, 'message' => 'No se recibió el medio de busqueda']);
+        }
         break;
         
     case 'POST':

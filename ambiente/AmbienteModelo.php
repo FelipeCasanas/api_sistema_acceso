@@ -4,28 +4,44 @@ require_once('../mjolnir/conexion/gestor_consultas.php');
 
 class AmbienteModelo {
     
-    public static function obtener($filtros = [])
+    public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
 
-        $condiciones = ['activo' => '1'];
-
-        if (!empty($filtros['id'])) {
-            $condiciones['id'] = $filtros['id'];
+        if (empty($medio_busqueda)) {
+            return [
+                'success' => false,
+                'message' => 'No se definio argumento de busqueda'
+            ];
         }
 
-        list($sql, $params) = construirQuery('ambiente', [], 'SELECT', $condiciones);
-        $sql .= " ORDER BY fecha_creacion DESC";
+        if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN) === true) {
+            list($sql, $params) = construirQuery('ambiente', [], 'SELECT', [$medio_busqueda => $dato_busqueda]);
 
+        } else {
+            list($sql, $params) = construirQuery('ambiente', [], 'SELECT', [$medio_busqueda => ['LIKE', "%$dato_busqueda%"]]);
+        }
+
+        
         $stmt = ejecutarQuery($sql, $params);
+
         $resultados = [];
 
         while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            unset($fila['contrasena']);
             $resultados[] = $fila;
+        }
+
+        if (empty($resultados)) {
+            http_response_code(404);
+            return [
+                'success' => false,
+                'message' => 'ambiente no encontrado'
+            ];
         }
 
         return [
             'success' => true,
-            'message' => 'Ambientes obtenidos correctamente',
+            'message' => 'Información obtenida correctamente',
             'data' => $resultados
         ];
     }

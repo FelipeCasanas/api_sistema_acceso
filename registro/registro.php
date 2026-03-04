@@ -8,7 +8,17 @@ $data = json_decode(file_get_contents("php://input"), true) ?? [];
 switch ($method) {
 
     case 'GET':
-        echo json_encode(RegistroControlador::obtener($_GET));
+        if (isset($_GET['id'])) {
+            echo json_encode(RegistroControlador::obtener('id', $_GET['id']));
+        } else if(isset($_GET['id_usuario'])) {
+            echo json_encode(RegistroControlador::obtener('id_usuario', $_GET['id_usuario']));
+        } else if(isset($_GET['id_ambiente'])) {
+            echo json_encode(RegistroControlador::obtener('id_ambiente', $_GET['id_ambiente']));
+        } else if(isset($_GET['tipo_registro'])) {
+            echo json_encode(RegistroControlador::obtener('tipo_registro', $_GET['tipo_registro']));
+        } else {
+            return json_encode(['success' => false, 'message' => 'No se recibió el medio de busqueda']);
+        }
         break;
         
     case 'POST':

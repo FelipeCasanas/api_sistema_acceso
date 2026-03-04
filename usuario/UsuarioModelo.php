@@ -1,10 +1,54 @@
 <?php
-require_once ('../mjolnir/conexion/conectar.php');
-require_once ('../mjolnir/conexion/gestor_consultas.php');
+require_once('../mjolnir/conexion/conectar.php');
+require_once('../mjolnir/conexion/gestor_consultas.php');
 
-class UsuarioModelo {
+class UsuarioModelo
+{
 
-    public static function obtenerTodos() {
+    public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
+    {
+        if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN) === true) {
+            list($sql, $parametros) = construirQuery(
+                'usuario',
+                [],
+                'SELECT',
+                [$medio_busqueda => $dato_busqueda]
+            );
+
+        } else {
+            list($sql, $parametros) = construirQuery(
+                'usuario',
+                [],
+                'SELECT',
+                [$medio_busqueda => ['LIKE', "%$dato_busqueda%"]]
+            );
+        }
+
+        $stmt = ejecutarQuery($sql, $parametros);
+        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($usuarios)) {
+            http_response_code(404);
+            return [
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ];
+        }
+
+        // Eliminar contraseña de cada resultado
+        foreach ($usuarios as &$usuario) {
+            unset($usuario['contrasena']);
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Información del usuario obtenida',
+            'data' => $usuarios
+        ];
+    }
+
+    public static function obtenerTodos()
+    {
         list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['activo' => '1']);
         $stmt = ejecutarQuery($sql, $parametros);
 
@@ -21,26 +65,8 @@ class UsuarioModelo {
         ];
     }
 
-    public static function obtenerUno($id) {
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['id' => $id]);
-        $stmt = ejecutarQuery($sql, $parametros);
-        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$usuario) {
-            http_response_code(404);
-            return ['success' => false, 'message' => 'Usuario no encontrado'];
-        }
-
-        unset($usuario['contrasena']);
-
-        return [
-            'success' => true,
-            'message' => 'Información del usuario obtenida',
-            'data' => $usuario
-        ];
-    }
-    
-    public static function crear($datos) {
+    public static function crear($datos)
+    {
         $camposRequeridos = [
             'tipo_identificacion',
             'identificacion',
@@ -85,7 +111,8 @@ class UsuarioModelo {
         return ['success' => true, 'message' => 'Usuario creado exitosamente'];
     }
 
-    public static function modificar($id, $datos) {
+    public static function modificar($id, $datos)
+    {
         $camposValidos = [
             'tipo_identificacion',
             'identificacion',
@@ -129,7 +156,8 @@ class UsuarioModelo {
         ];
     }
 
-    public static function eliminar($id) {
+    public static function eliminar($id)
+    {
         list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['id' => $id]);
         $stmt = ejecutarQuery($sql, $parametros);
         $usuarios = procesarResultado($stmt, 'SELECT');

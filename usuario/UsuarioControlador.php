@@ -3,13 +3,13 @@ require_once('UsuarioModelo.php');
 
 class UsuarioControlador {
 
-    public static function obtenerUno($id_usuario) {
-        if (!$id_usuario) {
+    public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta) {
+        if (!$dato_busqueda) {
             http_response_code(400);
-            return ['success' => false, 'message' => 'No se recibió el ID del usuario'];
+            return ['success' => false, 'message' => 'No se recibió el medio de busqueda'];
         }
 
-        return UsuarioModelo::obtenerUno($id_usuario);
+        return UsuarioModelo::obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta);
     }
     
     public static function obtenerTodos() {
