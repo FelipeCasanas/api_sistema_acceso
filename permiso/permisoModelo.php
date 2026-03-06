@@ -47,6 +47,24 @@ class PermisoModelo
         ];
     }
 
+    public static function obtenerTodos()
+    {
+        list($sql, $parametros) = construirQuery('permiso', [], 'SELECT', []);
+        $stmt = ejecutarQuery($sql, $parametros);
+
+        $permisos = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            unset($row['contrasena']);
+            $permisos[] = $row;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'permisos activos obtenidos correctamente',
+            'data' => $permisos
+        ];
+    }
+
     public static function crear($datos)
     {
         $camposRequeridos = [

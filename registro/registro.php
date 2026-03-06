@@ -19,6 +19,8 @@ switch ($method) {
             echo json_encode(RegistroControlador::obtener('id_ambiente', $_GET['id_ambiente']));
         } else if(isset($_GET['tipo_registro'])) {
             echo json_encode(RegistroControlador::obtener('tipo_registro', $_GET['tipo_registro']));
+        } else if(isset($_GET['todos']) && $_GET['todos'] === 'true') {
+            echo json_encode(RegistroControlador::obtenerTodos());
         } else {
             echo json_encode(['success' => false, 'message' => 'No se recibió el medio de busqueda']);
         }

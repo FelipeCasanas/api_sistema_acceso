@@ -11,6 +11,10 @@ class PermisoControlador {
 
         return PermisoModelo::obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta);
     }
+
+    public static function obtenerTodos() {
+        return PermisoModelo::obtenerTodos();
+    }
     
     public static function crear($datos) {
         if (empty($datos['id_usuario']) && empty($datos['tipo_permiso'])) {

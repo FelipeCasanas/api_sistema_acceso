@@ -22,6 +22,24 @@ class RegistroModelo {
         ];
     }
 
+    public static function obtenerTodos()
+    {
+        list($sql, $parametros) = construirQuery('registro', [], 'SELECT', []);
+        $stmt = ejecutarQuery($sql, $parametros);
+
+        $registros = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            unset($row['contrasena']);
+            $registros[] = $row;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'registros activos obtenidos correctamente',
+            'data' => $registros
+        ];
+    }
+
     public static function registrar($datos) {
         $registro = [
             'id_usuario'   => $datos['registrado_por'],

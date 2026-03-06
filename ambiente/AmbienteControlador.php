@@ -12,6 +12,10 @@ class AmbienteControlador {
         
         return AmbienteModelo::obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta);
     }
+
+    public static function obtenerTodos() {
+        return AmbienteModelo::obtenerTodos();
+    }
     
     public static function crear($datos)
     {

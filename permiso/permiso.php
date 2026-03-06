@@ -19,6 +19,8 @@ switch ($method) {
             echo json_encode(PermisoControlador::obtener('tipo_permiso', $_GET['tipo_permiso'], true));
         } else if(isset($_GET['estado'])) {
             echo json_encode(PermisoControlador::obtener('estado', $_GET['estado'], true));
+        } else if(isset($_GET['todos']) && $_GET['todos'] === 'true') {
+            echo json_encode(PermisoControlador::obtenerTodos());
         } else {
             echo json_encode(['success' => false, 'message' => 'No se recibió el medio de busqueda']);
         }

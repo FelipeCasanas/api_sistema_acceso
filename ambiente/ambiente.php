@@ -16,6 +16,8 @@ switch ($method) {
             echo json_encode(AmbienteControlador::obtener('bloque', $_GET['bloque'], $_GET['coincidencia_exacta'] ?? true));
         } else if(isset($_GET['sitio'])) {
             echo json_encode(AmbienteControlador::obtener('sitio', $_GET['sitio'], $_GET['coincidencia_exacta'] ?? true));
+        } else if(isset($_GET['todos']) && $_GET['todos'] === 'true') {
+            echo json_encode(AmbienteControlador::obtenerTodos());
         } else {
             echo json_encode(['success' => false, 'message' => 'No se recibió el medio de busqueda']);
         }

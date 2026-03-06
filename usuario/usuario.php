@@ -21,8 +21,10 @@ switch ($metodo) {
             echo json_encode(UsuarioControlador::obtener('nombre', $_GET['nombre'], $_GET['coincidencia_exacta'] ?? true));
         } else if(isset($_GET['identificacion'])) {
             echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
-        } else {
+        } else if(isset($_GET['todos']) && $_GET['todos'] === 'true') {
             echo json_encode(UsuarioControlador::obtenerTodos());
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se recibió el medio de busqueda']);
         }
         break;
 

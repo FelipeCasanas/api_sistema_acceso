@@ -46,6 +46,24 @@ class AmbienteModelo {
         ];
     }
 
+    public static function obtenerTodos()
+    {
+        list($sql, $parametros) = construirQuery('ambiente', [], 'SELECT', ['activo' => '1']);
+        $stmt = ejecutarQuery($sql, $parametros);
+
+        $ambientes = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            unset($row['contrasena']);
+            $ambientes[] = $row;
+        }
+
+        return [
+            'success' => true,
+            'message' => 'ambientes activos obtenidos correctamente',
+            'data' => $ambientes
+        ];
+    }
+
     public static function crear($datos)
     {
 

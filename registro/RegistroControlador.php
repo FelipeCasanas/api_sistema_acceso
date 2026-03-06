@@ -12,6 +12,10 @@ class RegistroControlador {
         return RegistroModelo::obtener($medio_busqueda, $dato_busqueda);
     }
 
+    public static function obtenerTodos() {
+        return RegistroModelo::obtenerTodos();
+    }
+    
     public static function registrar($datos) {
         $campos = ['registrado_por', 'id_elemento', 'tipo_registro', 'descripcion'];
         foreach ($campos as $campo) {
