@@ -42,7 +42,8 @@ class AuthModelo {
         $_SESSION['usuario'] = [
             'id' => $usuario['id'],
             'nombre' => $usuario['nombre'],
-            'identificacion' => $usuario['identificacion']
+            'identificacion' => $usuario['identificacion'],
+            'cargo' => $usuario['cargo']
         ];
 
         return [
