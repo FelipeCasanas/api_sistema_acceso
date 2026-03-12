@@ -47,7 +47,7 @@ switch ($method) {
         break;
 
     case 'PUT':
-        echo json_encode(PermisoControlador::modificar($_GET['id'], $data));
+        echo json_encode(PermisoControlador::modificar($data));
         break;
 
     default:

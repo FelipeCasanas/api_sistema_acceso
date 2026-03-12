@@ -1,4 +1,4 @@
-<?php
+<?php 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -12,24 +12,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $metodo = $_SERVER['REQUEST_METHOD'];
-$datos = json_decode(file_get_contents("php://input"), true) ?? [];
 
 switch ($metodo) {
 
     case 'GET':
-            echo json_encode(ImagenControlador::obtener(isset($_GET['id']) ? $_GET['id'] : null));
+        echo json_encode(
+            ImagenControlador::obtener(
+                $_GET['tipo'] ?? null,
+                $_GET['id'] ?? null
+            )
+        );
         break;
 
     case 'POST':
-            echo json_encode(
-                ImagenControlador::subirImagen(
-                    $_POST['id'] ?? null,
-                    $_FILES['imagen'] ?? null
-                )
-            );
+        echo json_encode(
+            ImagenControlador::subirImagen(
+                $_POST['tipo'] ?? null,
+                $_POST['id'] ?? null,
+                $_FILES['imagen'] ?? null
+            )
+        );
         break;
 
     default:
         http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Método no permitido'
+        ]);
 }

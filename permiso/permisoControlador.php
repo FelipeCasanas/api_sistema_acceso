@@ -25,16 +25,16 @@ class PermisoControlador {
         return PermisoModelo::crear($datos);
     }
 
-    public static function modificar($id, $datos) {
+    public static function modificar($datos) {
         if (empty($datos['id'])) {
             http_response_code(400);
             return ['success' => false, 'message' => 'No se recibió el ID del usuario'];
         }
 
-        if (!empty($datos['estado'])) {
+        if (empty($datos['estado'])) {
             return json_encode(['success' => false, 'message' => 'No se puede modificar el estado del permiso']);
         }
 
-        return PermisoModelo::modificar($id, $datos);
+        return PermisoModelo::modificar($datos);
     }
 }

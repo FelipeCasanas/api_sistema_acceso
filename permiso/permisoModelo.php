@@ -104,10 +104,10 @@ class PermisoModelo
         return ['success' => true, 'message' => 'permiso creado exitosamente'];
     }
 
-    public static function modificar($id, $datos)
+    public static function modificar($datos)
     {
         // Verifica existencia
-        list($sql, $parametros) = construirQuery('permiso', [], 'SELECT', ['id' => $id]);
+        list($sql, $parametros) = construirQuery('permiso', [], 'SELECT', ['id' => $datos['id']]);
         $stmt = ejecutarQuery($sql, $parametros);
         $permisos = procesarResultado($stmt, 'SELECT');
 
@@ -117,7 +117,7 @@ class PermisoModelo
         }
 
         // Actualizar
-        list($sql, $parametros) = construirQuery('permiso', $$datos, 'UPDATE', ['id' => $id]);
+        list($sql, $parametros) = construirQuery('permiso', ['estado' => $datos['estado']], 'UPDATE', ['id' => $datos['id']]);
         $stmt = ejecutarQuery($sql, $parametros);
 
         return [

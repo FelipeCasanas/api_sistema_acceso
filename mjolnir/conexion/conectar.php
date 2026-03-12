@@ -1,4 +1,6 @@
 <?php
+date_default_timezone_set('America/Bogota');
+
 function obtenerConexion() {
     $host = 'localhost';
     $dbname = 'etherium';
@@ -15,6 +17,7 @@ function obtenerConexion() {
 
     try {
         $conexion = new PDO($dsn, $usuario, $contrasena, $opciones);
+        $conexion->query("SET time_zone = '-05:00'"); // Establecer zona horaria
         return $conexion;
     } catch (PDOException $e) {
         // Aquí puedes loguear el error o mostrar mensaje personalizado
