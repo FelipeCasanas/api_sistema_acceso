@@ -94,7 +94,7 @@ class RegistroModelo
         if ($stmt->execute()) {
             return [
                 'success' => true,
-                'tipo_registro' => $tipoRegistro
+                'message' => $tipoRegistro
             ];
         } else {
             return [

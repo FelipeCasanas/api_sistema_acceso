@@ -85,7 +85,7 @@ class PermisoModelo
     public static function crear($datos)
     {
         $camposRequeridos = [
-            'id_permiso',
+            'id_usuario',
             'tipo_permiso',
             'descripcion',
             'comprobante',
