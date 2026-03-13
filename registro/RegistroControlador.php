@@ -17,7 +17,7 @@ class RegistroControlador {
     }
     
     public static function registrar($datos) {
-        $campos = ['registrado_por', 'id_elemento', 'tipo_registro', 'descripcion'];
+        $campos = ['id_usuario', 'id_ambiente'];
         foreach ($campos as $campo) {
             if (empty($datos[$campo])) {
                 http_response_code(400);

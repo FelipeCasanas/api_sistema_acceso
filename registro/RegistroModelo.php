@@ -1,17 +1,19 @@
 <?php
-require_once ('../mjolnir/conexion/conectar.php');
-require_once ('../mjolnir/conexion/gestor_consultas.php');
+require_once('../mjolnir/conexion/conectar.php');
+require_once('../mjolnir/conexion/gestor_consultas.php');
 
-class RegistroModelo {
+class RegistroModelo
+{
 
-    public static function obtener($medio_busqueda, $dato_busqueda) {
+    public static function obtener($medio_busqueda, $dato_busqueda)
+    {
         list($sql, $params) = construirQuery('registro', [], 'SELECT', [$medio_busqueda => $dato_busqueda]);
         $sql .= " ORDER BY fecha_registro DESC";
 
         $stmt = ejecutarQuery($sql, $params);
         $resultados = [];
 
-        while($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $resultados[] = $fila;
         }
 
@@ -40,18 +42,65 @@ class RegistroModelo {
         ];
     }
 
-    public static function registrar($datos) {
-        $registro = [
-            'id_usuario'   => $datos['registrado_por'],
-            'id_ambiente'      => $datos['id_elemento'],
-            'tipo_registro'  => $datos['tipo_registro']
-        ];
+    public static function obtenerUltimo($idUsuario, $idAmbiente)
+    {
+        $sql = "SELECT tipo_registro
+            FROM registro
+            WHERE id_usuario = :id_usuario
+            AND id_ambiente = :id_ambiente
+            ORDER BY id DESC
+            LIMIT 1";
 
-        list($sql, $params) = construirQuery('registro', $registro, 'INSERT');
-        $stmt = ejecutarQuery($sql, $params);
+        $stmt = obtenerConexion()->prepare($sql);
+        $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmt->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
+        $stmt->execute();
 
-        return $stmt
-            ? ['success' => true, 'message' => 'Registro registrado exitosamente']
-            : ['success' => false, 'message' => 'Error al registrar el registro'];
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $resultado ? $resultado : null;
+    }
+
+    public static function registrar($datos)
+    {
+
+        if (!isset($datos['id_usuario']) || !isset($datos['id_ambiente'])) {
+            http_response_code(400);
+            return [
+                'success' => false,
+                'message' => 'Faltan campos: id_usuario o id_ambiente'
+            ];
+        }
+
+        $idUsuario = $datos['id_usuario'];
+        $idAmbiente = $datos['id_ambiente'];
+
+        $ultimoRegistro = self::obtenerUltimo($idUsuario, $idAmbiente);
+
+        if ($ultimoRegistro !== null && strtoupper($ultimoRegistro['tipo_registro']) === 'ENTRADA') {
+            $tipoRegistro = 'SALIDA';
+        } else {
+            $tipoRegistro = 'ENTRADA';
+        }
+
+        $sql = "INSERT INTO registro (id_usuario, id_ambiente, tipo_registro)
+            VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
+
+        $stmt = obtenerConexion()->prepare($sql);
+        $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmt->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
+        $stmt->bindParam(':tipo_registro', $tipoRegistro, PDO::PARAM_STR);
+
+        if ($stmt->execute()) {
+            return [
+                'success' => true,
+                'tipo_registro' => $tipoRegistro
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Error al registrar'
+            ];
+        }
     }
 }
