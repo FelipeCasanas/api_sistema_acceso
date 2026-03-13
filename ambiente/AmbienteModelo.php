@@ -3,7 +3,26 @@ require_once('../mjolnir/conexion/conectar.php');
 require_once('../mjolnir/conexion/gestor_consultas.php');
 
 class AmbienteModelo {
-    
+
+    public static function obtenerTotal()
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM ambiente
+                WHERE activo = :activo";
+
+        $stmt = obtenerConexion()->prepare($sql);
+        $stmt->bindValue(':activo', '1', PDO::PARAM_INT);
+        $stmt->execute();
+
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'success' => true,
+            'message' => 'Total de ambientes activos obtenido correctamente',
+            'data' => $resultado['total']
+        ];
+    }
+
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
 

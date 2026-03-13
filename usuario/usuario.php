@@ -16,6 +16,9 @@ $datos = json_decode(file_get_contents("php://input"), true) ?? [];
 switch ($metodo) {
     case 'GET':
         switch (true) {
+            case isset($_GET['total']):
+                echo json_encode(UsuarioControlador::obtenerTotal());
+                break;
             case isset($_GET['id']):
                 echo json_encode(UsuarioControlador::obtener('id', $_GET['id'], true));
                 break;

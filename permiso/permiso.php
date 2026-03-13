@@ -17,6 +17,9 @@ switch ($method) {
 
     case 'GET':
         switch (true) {
+            case isset($_GET['total']):
+                echo json_encode(PermisoControlador::obtenerTotal());
+                break;
             case isset($_GET['id']):
                 echo json_encode(PermisoControlador::obtener('id', $_GET['id'], true));
                 break;

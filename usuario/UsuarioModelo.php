@@ -5,6 +5,25 @@ require_once('../mjolnir/conexion/gestor_consultas.php');
 class UsuarioModelo
 {
 
+    public static function obtenerTotal()
+    {
+        $sql = "SELECT COUNT(*) AS total
+                FROM usuario
+                WHERE activo = :activo";
+
+        $stmt = obtenerConexion()->prepare($sql);
+        $stmt->bindValue(':activo', '1', PDO::PARAM_INT);
+        $stmt->execute();
+
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'success' => true,
+            'message' => 'Total de usuarios activos obtenido correctamente',
+            'data' => $resultado['total']
+        ];
+    }
+    
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
         if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN) === true) {

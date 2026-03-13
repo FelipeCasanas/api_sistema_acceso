@@ -3,6 +3,10 @@ require_once('UsuarioModelo.php');
 
 class UsuarioControlador {
 
+    public static function obtenerTotal() {
+        return UsuarioModelo::obtenerTotal();
+    }
+
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta) {
         if (!$dato_busqueda) {
             http_response_code(400);

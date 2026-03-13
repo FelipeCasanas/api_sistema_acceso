@@ -3,6 +3,10 @@ require_once('AmbienteModelo.php');
 
 class AmbienteControlador {
 
+    public static function obtenerTotal() {
+        return AmbienteModelo::obtenerTotal();
+    }
+    
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
         if (!$dato_busqueda) {

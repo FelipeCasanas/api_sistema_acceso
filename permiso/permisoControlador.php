@@ -3,6 +3,10 @@ require_once('PermisoModelo.php');
 
 class PermisoControlador {
 
+    public static function obtenerTotal() {
+        return PermisoModelo::obtenerTotal();
+    }
+    
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta) {
         if (!$dato_busqueda) {
             http_response_code(400);
