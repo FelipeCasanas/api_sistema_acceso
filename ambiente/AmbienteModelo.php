@@ -1,17 +1,14 @@
 <?php
 require_once('../mjolnir/conexion/conectar.php');
-require_once('../mjolnir/conexion/gestor_consultas.php');
 
 class AmbienteModelo {
 
     public static function obtenerTotal()
     {
-        $sql = "SELECT COUNT(*) AS total
-                FROM ambiente
-                WHERE activo = :activo";
+        $sql = "SELECT COUNT(*) AS total FROM ambiente WHERE activo = :activo";
 
         $stmt = obtenerConexion()->prepare($sql);
-        $stmt->bindValue(':activo', '1', PDO::PARAM_INT);
+        $stmt->bindValue(':activo', 1, PDO::PARAM_INT);
         $stmt->execute();
 
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -25,7 +22,6 @@ class AmbienteModelo {
 
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
-
         if (empty($medio_busqueda)) {
             return [
                 'success' => false,
@@ -33,22 +29,20 @@ class AmbienteModelo {
             ];
         }
 
-        if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN) === true) {
-            list($sql, $params) = construirQuery('ambiente', [], 'SELECT', [$medio_busqueda => $dato_busqueda]);
+        $conexion = obtenerConexion();
 
+        if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
+            $sql = "SELECT * FROM ambiente WHERE $medio_busqueda = :dato";
+            $stmt = $conexion->prepare($sql);
+            $stmt->bindValue(':dato', $dato_busqueda);
         } else {
-            list($sql, $params) = construirQuery('ambiente', [], 'SELECT', [$medio_busqueda => ['LIKE', "%$dato_busqueda%"]]);
+            $sql = "SELECT * FROM ambiente WHERE $medio_busqueda LIKE :dato";
+            $stmt = $conexion->prepare($sql);
+            $stmt->bindValue(':dato', "%$dato_busqueda%");
         }
 
-        
-        $stmt = ejecutarQuery($sql, $params);
-
-        $resultados = [];
-
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            unset($fila['contrasena']);
-            $resultados[] = $fila;
-        }
+        $stmt->execute();
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($resultados)) {
             http_response_code(404);
@@ -67,14 +61,14 @@ class AmbienteModelo {
 
     public static function obtenerTodos()
     {
-        list($sql, $parametros) = construirQuery('ambiente', [], 'SELECT', ['activo' => '1']);
-        $stmt = ejecutarQuery($sql, $parametros);
+        $conexion = obtenerConexion();
 
-        $ambientes = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            unset($row['contrasena']);
-            $ambientes[] = $row;
-        }
+        $sql = "SELECT * FROM ambiente WHERE activo = :activo";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':activo', 1, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $ambientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return [
             'success' => true,
@@ -85,30 +79,35 @@ class AmbienteModelo {
 
     public static function crear($datos)
     {
+        $conexion = obtenerConexion();
 
-        $registro = [
-            'id_creador'      => $datos['id_creador'],
-            'bloque'  => $datos['bloque'],
-            'sitio'  => $datos['sitio'],
-            'activo'          => '1'
+        $sql = "INSERT INTO ambiente (id_creador, bloque, sitio, activo)
+                VALUES (:id_creador, :bloque, :sitio, 1)";
+
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':id_creador', $datos['id_creador']);
+        $stmt->bindValue(':bloque', $datos['bloque']);
+        $stmt->bindValue(':sitio', $datos['sitio']);
+
+        if (!$stmt->execute()) {
+            return [
+                'success' => false,
+                'message' => 'Error al crear ambiente'
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Ambiente creado exitosamente'
         ];
-
-        list($sql, $params) = construirQuery('ambiente', $registro, 'INSERT');
-        $stmt = ejecutarQuery($sql, $params);
-
-        return $stmt
-            ? ['success' => true, 'message' => 'Ambiente creado exitosamente']
-            : ['success' => false, 'message' => 'Error al crear ambiente'];
     }
-
 
     public static function modificar($datos)
     {
-
         $camposValidos = [
             'id_creador',
             'bloque',
-            'sitio',
+            'sitio'
         ];
 
         $datosFiltrados = [];
@@ -122,26 +121,59 @@ class AmbienteModelo {
 
         if (empty($datosFiltrados)) {
             http_response_code(400);
-            return ['success' => false, 'message' => 'No se enviaron datos para actualizar'];
+            return [
+                'success' => false,
+                'message' => 'No se enviaron datos para actualizar'
+            ];
         }
 
-        list($sql, $params) = construirQuery('ambiente', $datosFiltrados, 'UPDATE', ['id' => $id]);
-        $stmt = ejecutarQuery($sql, $params);
+        $conexion = obtenerConexion();
 
-        return $stmt
-            ? ['success' => true, 'message' => 'Ambiente actualizado correctamente']
-            : ['success' => false, 'message' => 'Error al actualizar'];
+        $set = [];
+        foreach ($datosFiltrados as $campo => $valor) {
+            $set[] = "$campo = :$campo";
+        }
+
+        $sql = "UPDATE ambiente SET " . implode(", ", $set) . " WHERE id = :id";
+        $stmt = $conexion->prepare($sql);
+
+        foreach ($datosFiltrados as $campo => $valor) {
+            $stmt->bindValue(":$campo", $valor);
+        }
+
+        $stmt->bindValue(':id', $id);
+
+        if (!$stmt->execute()) {
+            return [
+                'success' => false,
+                'message' => 'Error al actualizar'
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Ambiente actualizado correctamente'
+        ];
     }
-
 
     public static function eliminar($id)
     {
+        $conexion = obtenerConexion();
 
-        list($sql, $params) = construirQuery('ambiente', ['activo' => '0'], 'UPDATE', ['id' => $id]);
-        $stmt = ejecutarQuery($sql, $params);
+        $sql = "UPDATE ambiente SET activo = 0 WHERE id = :id";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':id', $id);
 
-        return $stmt
-            ? ['success' => true, 'message' => 'Ambiente eliminado']
-            : ['success' => false, 'message' => 'Error al eliminar'];
+        if (!$stmt->execute()) {
+            return [
+                'success' => false,
+                'message' => 'Error al eliminar'
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Ambiente eliminado'
+        ];
     }
 }

@@ -1,21 +1,22 @@
 <?php
 require_once('../mjolnir/conexion/conectar.php');
-require_once('../mjolnir/conexion/gestor_consultas.php');
 
 class RegistroModelo
 {
 
     public static function obtener($medio_busqueda, $dato_busqueda)
     {
-        list($sql, $params) = construirQuery('registro', [], 'SELECT', [$medio_busqueda => $dato_busqueda]);
-        $sql .= " ORDER BY fecha_registro DESC";
+        $conexion = obtenerConexion();
 
-        $stmt = ejecutarQuery($sql, $params);
-        $resultados = [];
+        $sql = "SELECT * FROM registro 
+                WHERE $medio_busqueda = :dato_busqueda
+                ORDER BY fecha_registro DESC";
 
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $resultados[] = $fila;
-        }
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':dato_busqueda', $dato_busqueda);
+        $stmt->execute();
+
+        $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return [
             'success' => true,
@@ -26,14 +27,13 @@ class RegistroModelo
 
     public static function obtenerTodos()
     {
-        list($sql, $parametros) = construirQuery('registro', [], 'SELECT', []);
-        $stmt = ejecutarQuery($sql, $parametros);
+        $conexion = obtenerConexion();
 
-        $registros = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            unset($row['contrasena']);
-            $registros[] = $row;
-        }
+        $sql = "SELECT * FROM registro";
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute();
+
+        $registros = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return [
             'success' => true,
@@ -45,11 +45,11 @@ class RegistroModelo
     public static function obtenerUltimo($idUsuario, $idAmbiente)
     {
         $sql = "SELECT tipo_registro
-            FROM registro
-            WHERE id_usuario = :id_usuario
-            AND id_ambiente = :id_ambiente
-            ORDER BY id DESC
-            LIMIT 1";
+                FROM registro
+                WHERE id_usuario = :id_usuario
+                AND id_ambiente = :id_ambiente
+                ORDER BY id DESC
+                LIMIT 1";
 
         $stmt = obtenerConexion()->prepare($sql);
         $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
@@ -84,7 +84,7 @@ class RegistroModelo
         }
 
         $sql = "INSERT INTO registro (id_usuario, id_ambiente, tipo_registro)
-            VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
+                VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
 
         $stmt = obtenerConexion()->prepare($sql);
         $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
