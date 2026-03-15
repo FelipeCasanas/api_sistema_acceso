@@ -11,37 +11,22 @@ $metodo = $_SERVER['REQUEST_METHOD'];
 switch ($metodo) {
 
     case 'POST':
-
-        if(isset($_FILES['archivo'])){
-            echo json_encode(CargaControlador::subir($_FILES['archivo']));
+        if(isset($_POST['id']) && isset($_FILES['archivo'])){
+            echo json_encode(CargaControlador::subir($_POST, $_FILES['archivo']));
         } else {
             echo json_encode([
                 'success'=>false,
-                'message'=>'No se recibió archivo'
+                'message'=>'No se recibió archivo o id'
             ]);
         }
 
     break;
 
-    case 'PUT':
-
-        $datos = json_decode(file_get_contents("php://input"), true) ?? [];
-
-        if(isset($datos['id']) && isset($datos['ruta'])){
-            echo json_encode(
-                CargaControlador::guardarRuta(
-                    $datos['id'],
-                    $datos['ruta']
-                )
-            );
-        } else {
-            echo json_encode([
-                'success'=>false,
-                'message'=>'Datos incompletos'
-            ]);
-        }
-
-    break;
-
+    default:
+        echo json_encode([
+            'success'=>false,
+            'message'=>'Método no permitido'
+        ]);
+        break;
 }
 ?>

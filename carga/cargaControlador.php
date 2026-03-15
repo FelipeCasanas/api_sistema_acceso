@@ -4,7 +4,7 @@ require_once('CargaModelo.php');
 class CargaControlador
 {
 
-    public static function subir($archivo)
+    public static function subir($datos, $archivo)
     {
 
         $extensiones_imagen = ['jpg','jpeg','png'];
@@ -32,6 +32,8 @@ class CargaControlador
         }
 
         if(move_uploaded_file($archivo['tmp_name'],$destino)){
+
+            CargaControlador::guardarRuta($datos['id'], $ruta);
 
             return [
                 'success'=>true,
