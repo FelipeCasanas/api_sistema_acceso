@@ -28,7 +28,8 @@ class PermisoModelo
 
             $sql = "SELECT 
                         p.id,
-                        u.nombre AS id_usuario,
+                        p.id_usuario,
+                        u.nombre AS nombre_usuario,
                         p.tipo_permiso,
                         p.descripcion,
                         p.comprobante,

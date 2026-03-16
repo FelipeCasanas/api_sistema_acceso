@@ -35,10 +35,12 @@ class AmbienteModelo {
 
             $sql = "SELECT 
                         a.id,
-                        u.nombre AS id_creador,
+                        a.id_creador,
+                        u.nombre AS nombre_creador,
                         a.bloque,
                         a.sitio,
-                        a.activo
+                        a.activo,
+                        a.fecha_creacion
                     FROM ambiente a
                     JOIN usuario u ON a.id_creador = u.id
                     WHERE a.$medio_busqueda = :dato";
@@ -50,10 +52,12 @@ class AmbienteModelo {
 
             $sql = "SELECT 
                         a.id,
-                        u.nombre AS id_creador,
+                        a.id_creador,
+                        u.nombre AS nombre_creador,
                         a.bloque,
                         a.sitio,
-                        a.activo
+                        a.activo,
+                        a.fecha_creacion
                     FROM ambiente a
                     JOIN usuario u ON a.id_creador = u.id
                     WHERE a.$medio_busqueda LIKE :dato";
@@ -86,10 +90,12 @@ class AmbienteModelo {
 
         $sql = "SELECT 
                     a.id,
-                    u.nombre AS id_creador,
+                    a.id_creador,
+                    u.nombre AS nombre_creador,
                     a.bloque,
                     a.sitio,
-                    a.activo
+                    a.activo,
+                    a.fecha_creacion
                 FROM ambiente a
                 JOIN usuario u ON a.id_creador = u.id
                 WHERE a.activo = :activo";
