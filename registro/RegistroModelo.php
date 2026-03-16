@@ -9,16 +9,19 @@ class RegistroModelo
         $conexion = obtenerConexion();
 
         $sql = "SELECT 
-                    r.id,
-                    u.nombre AS id_usuario,
-                    CONCAT(a.bloque, ' ', a.sitio) AS id_ambiente,
-                    r.tipo_registro,
-                    r.fecha_registro
-                FROM registro r
-                JOIN usuario u ON r.id_usuario = u.id
-                JOIN ambiente a ON r.id_ambiente = a.id
-                WHERE r.$medio_busqueda = :dato_busqueda
-                ORDER BY r.fecha_registro DESC";
+            r.id,
+            r.id_usuario,
+            r.id_ambiente,
+            r.tipo_registro,
+            r.fecha_registro,
+            u.nombre AS nombre_usuario,
+            a.sitio AS sitio_ambiente,
+            a.bloque AS bloque_ambiente
+        FROM registro r
+        JOIN usuario u ON r.id_usuario = u.id
+        JOIN ambiente a ON r.id_ambiente = a.id
+        WHERE r.$medio_busqueda = :dato_busqueda
+        ORDER BY r.fecha_registro DESC";
 
         $stmt = $conexion->prepare($sql);
         $stmt->bindValue(':dato_busqueda', $dato_busqueda);
@@ -38,15 +41,18 @@ class RegistroModelo
         $conexion = obtenerConexion();
 
         $sql = "SELECT 
-                    r.id,
-                    u.nombre AS id_usuario,
-                    CONCAT(a.bloque, ' ', a.sitio) AS id_ambiente,
-                    r.tipo_registro,
-                    r.fecha_registro
-                FROM registro r
-                JOIN usuario u ON r.id_usuario = u.id
-                JOIN ambiente a ON r.id_ambiente = a.id
-                ORDER BY r.fecha_registro DESC";
+            r.id,
+            r.id_usuario,
+            r.id_ambiente,
+            r.tipo_registro,
+            r.fecha_registro,
+            u.nombre AS nombre_usuario,
+            a.sitio AS sitio_ambiente,
+            a.bloque AS bloque_ambiente
+        FROM registro r
+        JOIN usuario u ON r.id_usuario = u.id
+        JOIN ambiente a ON r.id_ambiente = a.id
+        ORDER BY r.fecha_registro DESC";
 
         $stmt = $conexion->prepare($sql);
         $stmt->execute();

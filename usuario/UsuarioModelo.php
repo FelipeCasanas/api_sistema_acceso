@@ -88,9 +88,10 @@ class UsuarioModelo
             }
         }
 
-        $sql = "SELECT id FROM usuario WHERE identificacion = :identificacion";
+        $sql = "SELECT id FROM usuario WHERE identificacion = :identificacion AND activo = :estado";
         $consulta = obtenerConexion()->prepare($sql);
         $consulta->bindValue(':identificacion', $datos['identificacion']);
+        $consulta->bindValue(':estado', 1, PDO::PARAM_INT);
         $consulta->execute();
 
         if ($consulta->fetch()) {

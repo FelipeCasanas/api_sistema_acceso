@@ -33,6 +33,7 @@ class PermisoModelo
                         p.descripcion,
                         p.comprobante,
                         p.estado,
+                        p.fecha_creacion,
                         p.fecha_estado
                     FROM permiso p
                     JOIN usuario u ON p.id_usuario = u.id
@@ -50,6 +51,7 @@ class PermisoModelo
                         p.descripcion,
                         p.comprobante,
                         p.estado,
+                        p.fecha_creacion,
                         p.fecha_estado
                     FROM permiso p
                     JOIN usuario u ON p.id_usuario = u.id
@@ -88,6 +90,7 @@ class PermisoModelo
                     p.descripcion,
                     p.comprobante,
                     p.estado,
+                    p.fecha_creacion,
                     p.fecha_estado
                 FROM permiso p
                 JOIN usuario u ON p.id_usuario = u.id";
