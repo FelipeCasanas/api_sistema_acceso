@@ -25,11 +25,36 @@ class PermisoModelo
         $conexion = obtenerConexion();
 
         if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
-            $sql = "SELECT * FROM permiso WHERE $medio_busqueda = :dato";
+
+            $sql = "SELECT 
+                        p.id,
+                        u.nombre AS id_usuario,
+                        p.tipo_permiso,
+                        p.descripcion,
+                        p.comprobante,
+                        p.estado,
+                        p.fecha_estado
+                    FROM permiso p
+                    JOIN usuario u ON p.id_usuario = u.id
+                    WHERE p.$medio_busqueda = :dato";
+
             $stmt = $conexion->prepare($sql);
             $stmt->bindValue(':dato', $dato_busqueda);
+
         } else {
-            $sql = "SELECT * FROM permiso WHERE $medio_busqueda LIKE :dato";
+
+            $sql = "SELECT 
+                        p.id,
+                        u.nombre AS id_usuario,
+                        p.tipo_permiso,
+                        p.descripcion,
+                        p.comprobante,
+                        p.estado,
+                        p.fecha_estado
+                    FROM permiso p
+                    JOIN usuario u ON p.id_usuario = u.id
+                    WHERE p.$medio_busqueda LIKE :dato";
+
             $stmt = $conexion->prepare($sql);
             $stmt->bindValue(':dato', "%$dato_busqueda%");
         }
@@ -56,7 +81,17 @@ class PermisoModelo
     {
         $conexion = obtenerConexion();
 
-        $sql = "SELECT * FROM permiso";
+        $sql = "SELECT 
+                    p.id,
+                    u.nombre AS id_usuario,
+                    p.tipo_permiso,
+                    p.descripcion,
+                    p.comprobante,
+                    p.estado,
+                    p.fecha_estado
+                FROM permiso p
+                JOIN usuario u ON p.id_usuario = u.id";
+
         $stmt = $conexion->prepare($sql);
         $stmt->execute();
 
@@ -159,7 +194,7 @@ class PermisoModelo
 
         return [
             'success' => $stmt->rowCount() > 0,
-            'message' => $stmt->rowCount() > 0 
+            'message' => $stmt->rowCount() > 0
                 ? 'permiso actualizado correctamente'
                 : 'No se realizaron cambios en el permiso'
         ];

@@ -8,9 +8,17 @@ class RegistroModelo
     {
         $conexion = obtenerConexion();
 
-        $sql = "SELECT * FROM registro 
-                WHERE $medio_busqueda = :dato_busqueda
-                ORDER BY fecha_registro DESC";
+        $sql = "SELECT 
+                    r.id,
+                    u.nombre AS id_usuario,
+                    CONCAT(a.bloque, ' ', a.sitio) AS id_ambiente,
+                    r.tipo_registro,
+                    r.fecha_registro
+                FROM registro r
+                JOIN usuario u ON r.id_usuario = u.id
+                JOIN ambiente a ON r.id_ambiente = a.id
+                WHERE r.$medio_busqueda = :dato_busqueda
+                ORDER BY r.fecha_registro DESC";
 
         $stmt = $conexion->prepare($sql);
         $stmt->bindValue(':dato_busqueda', $dato_busqueda);
@@ -29,7 +37,17 @@ class RegistroModelo
     {
         $conexion = obtenerConexion();
 
-        $sql = "SELECT * FROM registro";
+        $sql = "SELECT 
+                    r.id,
+                    u.nombre AS id_usuario,
+                    CONCAT(a.bloque, ' ', a.sitio) AS id_ambiente,
+                    r.tipo_registro,
+                    r.fecha_registro
+                FROM registro r
+                JOIN usuario u ON r.id_usuario = u.id
+                JOIN ambiente a ON r.id_ambiente = a.id
+                ORDER BY r.fecha_registro DESC";
+
         $stmt = $conexion->prepare($sql);
         $stmt->execute();
 

@@ -32,11 +32,32 @@ class AmbienteModelo {
         $conexion = obtenerConexion();
 
         if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
-            $sql = "SELECT * FROM ambiente WHERE $medio_busqueda = :dato";
+
+            $sql = "SELECT 
+                        a.id,
+                        u.nombre AS id_creador,
+                        a.bloque,
+                        a.sitio,
+                        a.activo
+                    FROM ambiente a
+                    JOIN usuario u ON a.id_creador = u.id
+                    WHERE a.$medio_busqueda = :dato";
+
             $stmt = $conexion->prepare($sql);
             $stmt->bindValue(':dato', $dato_busqueda);
+
         } else {
-            $sql = "SELECT * FROM ambiente WHERE $medio_busqueda LIKE :dato";
+
+            $sql = "SELECT 
+                        a.id,
+                        u.nombre AS id_creador,
+                        a.bloque,
+                        a.sitio,
+                        a.activo
+                    FROM ambiente a
+                    JOIN usuario u ON a.id_creador = u.id
+                    WHERE a.$medio_busqueda LIKE :dato";
+
             $stmt = $conexion->prepare($sql);
             $stmt->bindValue(':dato', "%$dato_busqueda%");
         }
@@ -63,7 +84,16 @@ class AmbienteModelo {
     {
         $conexion = obtenerConexion();
 
-        $sql = "SELECT * FROM ambiente WHERE activo = :activo";
+        $sql = "SELECT 
+                    a.id,
+                    u.nombre AS id_creador,
+                    a.bloque,
+                    a.sitio,
+                    a.activo
+                FROM ambiente a
+                JOIN usuario u ON a.id_creador = u.id
+                WHERE a.activo = :activo";
+
         $stmt = $conexion->prepare($sql);
         $stmt->bindValue(':activo', 1, PDO::PARAM_INT);
         $stmt->execute();
