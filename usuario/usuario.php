@@ -19,16 +19,21 @@ switch ($metodo) {
             case isset($_GET['total']):
                 echo json_encode(UsuarioControlador::obtenerTotal());
                 break;
+
             case isset($_GET['id']):
                 echo json_encode(UsuarioControlador::obtener('id', $_GET['id'], true));
                 break;
 
-            case isset($_GET['nombre']):
-                echo json_encode(UsuarioControlador::obtener('nombre', $_GET['nombre'], $_GET['coincidencia_exacta'] ?? true));
+            case isset($_GET['identificacion']):
+            echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
+            break;
+
+            case isset($_GET['cargo']):
+                echo json_encode(UsuarioControlador::obtener('cargo', $_GET['cargo'], $_GET['coincidencia_exacta'] ?? true));
                 break;
 
-            case isset($_GET['identificacion']):
-                echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
+            case isset($_GET['nombre']):
+                echo json_encode(UsuarioControlador::obtener('nombre', $_GET['nombre'], $_GET['coincidencia_exacta'] ?? true));
                 break;
 
             case isset($_GET['todos']) && $_GET['todos'] === 'true':
