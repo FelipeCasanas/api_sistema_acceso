@@ -5,31 +5,42 @@ require_once('../mjolnir/conexion/gestor_consultas.php');
 class CargaModelo
 {
 
-    public static function actualizarRuta($id,$ruta)
+    public static function actualizarRuta($id, $ruta, $tipo)
     {
 
-        $sql = "UPDATE permiso SET comprobante = :ruta WHERE id = :id";
+        $conexion = obtenerConexion();
 
-        $stmt = obtenerConexion()->prepare($sql);
+        if ($tipo === 'usuario') {
 
-        $stmt->bindParam(':ruta',$ruta);
-        $stmt->bindParam(':id',$id);
+            $sql = "UPDATE usuario SET enlace_imagen = :ruta WHERE id = :id";
 
-        if($stmt->execute()){
+        } elseif ($tipo === 'comprobante') {
 
+            $sql = "UPDATE permiso SET comprobante = :ruta WHERE id = :id";
+
+        } else {
             return [
-                'success'=>true,
-                'message'=>'Ruta guardada correctamente'
+                'success' => false,
+                'message' => 'Tipo no válido para guardar ruta'
             ];
+        }
 
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindParam(':ruta', $ruta);
+        $stmt->bindParam(':id', $id);
+
+        if ($stmt->execute()) {
+            return [
+                'success' => true,
+                'message' => 'Ruta guardada correctamente'
+            ];
         }
 
         return [
-            'success'=>false,
-            'message'=>'Error al guardar ruta'
+            'success' => false,
+            'message' => 'Error al guardar ruta'
         ];
-
     }
-
 }
 ?>
