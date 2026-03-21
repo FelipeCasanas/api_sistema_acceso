@@ -46,11 +46,14 @@ switch ($metodo) {
         break;
 
     case 'POST':
-        if (isset($_GET['masivo']) && $_GET['masivo'] === 'true') {
-            echo json_encode(UsuarioControlador::cargaMasiva($datos));
+        if (!empty($datos['masivo']) && $datos['masivo'] === true) {
+            echo json_encode(
+                UsuarioControlador::cargaMasiva($datos['usuarios'] ?? [])
+            );
+        } else {
+            echo json_encode(UsuarioControlador::crear($datos));
         }
-
-        break;
+    break;
 
     case 'PUT':
         echo json_encode(UsuarioControlador::modificar($datos));
