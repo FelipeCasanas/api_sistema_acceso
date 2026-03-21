@@ -29,6 +29,19 @@ class UsuarioControlador {
         return UsuarioModelo::crear($datos);
     }
 
+    public static function cargaMasiva($datos)
+    {
+        if (empty($datos) || !is_array($datos)) {
+            http_response_code(400);
+            return [
+                'success' => false,
+                'message' => 'Se esperaba un arreglo de usuarios'
+            ];
+        }
+
+        return UsuarioModelo::cargaMasiva($datos);
+    }
+
     public static function modificar($datos) {
         if (empty($datos['id'])) {
             http_response_code(400);

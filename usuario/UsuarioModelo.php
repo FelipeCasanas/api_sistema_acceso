@@ -130,6 +130,108 @@ class UsuarioModelo
         ];
     }
 
+    public static function cargaMasiva($usuarios)
+    {
+        $conexion = obtenerConexion();
+
+        $camposRequeridos = [
+            'nombre',
+            'identificacion',
+            'tipo_identificacion',
+            'correo',
+            'telefono',
+            'cargo'
+        ];
+
+        $total = count($usuarios);
+        $insertados = 0;
+        $duplicados = 0;
+        $errores = [];
+
+        try {
+            $conexion->beginTransaction();
+
+            // Obtener identificaciones ya existentes
+            $identificaciones = array_column($usuarios, 'identificacion');
+
+            if (!empty($identificaciones)) {
+                $placeholders = implode(',', array_fill(0, count($identificaciones), '?'));
+                $sql = "SELECT identificacion FROM usuario WHERE identificacion IN ($placeholders) AND activo = 1";
+                $consulta = $conexion->prepare($sql);
+                $consulta->execute($identificaciones);
+
+                $existentes = $consulta->fetchAll(PDO::FETCH_COLUMN);
+            } else {
+                $existentes = [];
+            }
+
+            // Preparar insert
+            $sqlInsert = "INSERT INTO usuario 
+                (tipo_identificacion, identificacion, cargo, nombre, correo, celular, activo) 
+                VALUES 
+                (:tipo_identificacion, :identificacion, :cargo, :nombre, :correo, :celular, 1)";
+
+            $stmtInsert = $conexion->prepare($sqlInsert);
+
+            foreach ($usuarios as $index => $usuario) {
+
+                // // Validación de campos
+                // foreach ($camposRequeridos as $campo) {
+                //     if (empty($usuario[$campo])) {
+                //         $errores[] = "Fila $index: falta $campo";
+                //         continue 2;
+                //     }
+                // }
+
+                // Validar duplicado
+                if (in_array($usuario['identificacion'], $existentes)) {
+                    $duplicados++;
+                    continue;
+                }
+
+                try {
+                    $stmtInsert->execute([
+                        ':tipo_identificacion' => $usuario['tipo_identificacion'],
+                        ':identificacion' => $usuario['identificacion'],
+                        ':cargo' => $usuario['cargo'],
+                        ':nombre' => $usuario['nombre'],
+                        ':correo' => $usuario['correo'],
+                        ':celular' => $usuario['telefono']
+                    ]);
+
+                    $insertados++;
+
+                } catch (Exception $e) {
+                    $errores[] = "Fila $index: error al insertar";
+                }
+            }
+
+            $conexion->commit();
+
+            return [
+                'success' => true,
+                'message' => 'Carga masiva procesada',
+                'data' => [
+                    'total' => $total,
+                    'insertados' => $insertados,
+                    'duplicados' => $duplicados,
+                    'fallidos' => count($errores),
+                    'errores' => $errores
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $conexion->rollBack();
+
+            http_response_code(500);
+            return [
+                'success' => false,
+                'message' => 'Error en la carga masiva',
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
     public static function modificar($id, $datos)
     {
         $camposValidos = [
