@@ -1,48 +1,36 @@
 <?php
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+require_once('CargaControlador.php');
 
-// Manejo de preflight (CORS)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-require_once('CargaControlador.php');
-
 $metodo = $_SERVER['REQUEST_METHOD'];
 
-switch ($metodo) {
+if ($metodo === 'POST') {
 
-    case 'POST':
+    $tipo = $_POST['tipo'] ?? null;
+    $id = $_POST['id'] ?? null;
+    $archivo = $_FILES['archivo'] ?? null;
 
-        // Validar datos obligatorios
-        if (
-            isset($_POST['id']) &&
-            isset($_POST['tipo']) &&
-            isset($_FILES['archivo'])
-        ) {
+    echo json_encode(
+        CargaControlador::subir($tipo, $id, $archivo)
+    );
 
-            echo json_encode(
-                CargaControlador::subir($_POST, $_FILES['archivo'])
-            );
+} elseif ($metodo === 'GET') {
 
-        } else {
+    $tipo = $_GET['tipo'] ?? null;
+    $id = $_GET['id'] ?? null;
 
-            echo json_encode([
-                'success' => false,
-                'message' => 'Faltan datos obligatorios (id, tipo o archivo)'
-            ]);
-        }
+    echo json_encode(
+        CargaControlador::obtener($tipo, $id)
+    );
 
-    break;
-
-    default:
-        echo json_encode([
-            'success' => false,
-            'message' => 'Método no permitido'
-        ]);
-    break;
+} else {
+    echo json_encode(["error" => "Método no permitido"]);
 }
