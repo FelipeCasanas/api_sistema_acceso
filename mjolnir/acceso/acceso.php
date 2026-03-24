@@ -15,7 +15,35 @@ $data = json_decode(file_get_contents("php://input"), true) ?? [];
 
 switch ($method) {
     case 'GET':
-        echo json_encode(AccesoControlador::obtener());
+
+        // Si NO viene ningún parámetro, retornar error
+        if (
+            !isset($_GET['id_usuario']) &&
+            !isset($_GET['android_id']) &&
+            !isset($_GET['medio_acceso'])
+        ) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Debe enviar al menos un parámetro'
+            ]);
+            return;
+        }
+
+        $data = [];
+
+        if (isset($_GET['id_usuario'])) {
+            $data['id_usuario'] = $_GET['id_usuario'];
+        }
+
+        if (isset($_GET['android_id'])) {
+            $data['android_id'] = $_GET['android_id'];
+        }
+
+        if (isset($_GET['medio_acceso'])) {
+            $data['medio_acceso'] = $_GET['medio_acceso'];
+        }
+
+        echo json_encode(AccesoControlador::obtener($data));
         break;
 
     case 'POST':

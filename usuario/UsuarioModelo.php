@@ -69,6 +69,8 @@ class UsuarioModelo
 
     public static function crear($datos)
     {
+        $conexion = obtenerConexion();
+
         $camposRequeridos = [
             'tipo_identificacion',
             'identificacion',
@@ -89,7 +91,7 @@ class UsuarioModelo
         }
 
         $sql = "SELECT id FROM usuario WHERE identificacion = :identificacion AND activo = :estado";
-        $consulta = obtenerConexion()->prepare($sql);
+        $consulta = $conexion->prepare($sql);
         $consulta->bindValue(':identificacion', $datos['identificacion']);
         $consulta->bindValue(':estado', 1, PDO::PARAM_INT);
         $consulta->execute();
@@ -103,11 +105,11 @@ class UsuarioModelo
         }
 
         $sql = "INSERT INTO usuario 
-                (tipo_identificacion, identificacion, cargo, nombre, correo, celular, activo) 
-                VALUES 
-                (:tipo_identificacion, :identificacion, :cargo, :nombre, :correo, :celular, 1)";
+            (tipo_identificacion, identificacion, cargo, nombre, correo, celular, activo) 
+            VALUES 
+            (:tipo_identificacion, :identificacion, :cargo, :nombre, :correo, :celular, 1)";
 
-        $consulta = obtenerConexion()->prepare($sql);
+        $consulta = $conexion->prepare($sql);
 
         $consulta->bindValue(':tipo_identificacion', $datos['tipo_identificacion']);
         $consulta->bindValue(':identificacion', $datos['identificacion']);
@@ -124,9 +126,14 @@ class UsuarioModelo
             ];
         }
 
+        $id = $conexion->lastInsertId();
+
         return [
             'success' => true,
-            'message' => 'Usuario creado exitosamente'
+            'message' => 'Usuario creado exitosamente',
+            'data' => [
+                'id' => $id
+            ]
         ];
     }
 
@@ -289,8 +296,8 @@ class UsuarioModelo
 
         return [
             'success' => $consulta->rowCount() > 0,
-            'message' => $consulta->rowCount() > 0 
-                ? 'Usuario actualizado correctamente' 
+            'message' => $consulta->rowCount() > 0
+                ? 'Usuario actualizado correctamente'
                 : 'No se realizaron cambios en el usuario'
         ];
     }
@@ -317,7 +324,7 @@ class UsuarioModelo
 
         return [
             'success' => $consulta->rowCount() > 0,
-            'message' => $consulta->rowCount() > 0 
+            'message' => $consulta->rowCount() > 0
                 ? 'Usuario eliminado correctamente'
                 : 'No se realizaron cambios'
         ];
