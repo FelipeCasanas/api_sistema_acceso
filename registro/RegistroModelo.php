@@ -87,7 +87,6 @@ class RegistroModelo
 
     public static function registrar($datos)
     {
-
         if (!isset($datos['id_usuario']) || !isset($datos['id_ambiente'])) {
             http_response_code(400);
             return [
@@ -99,16 +98,34 @@ class RegistroModelo
         $idUsuario = $datos['id_usuario'];
         $idAmbiente = $datos['id_ambiente'];
 
+        // Obtener último registro
         $ultimoRegistro = self::obtenerUltimo($idUsuario, $idAmbiente);
 
+        // Validación de 5 minutos
+        if ($ultimoRegistro !== null) {
+            $ultimaFecha = strtotime($ultimoRegistro['fecha_registro']);
+            $ahora = time();
+
+            if (($ahora - $ultimaFecha) < 300) {
+                $segundosRestantes = 300 - ($ahora - $ultimaFecha);
+
+                return [
+                    'success' => false,
+                    'message' => 'Debe esperar ' . $segundosRestantes . ' segundos antes de volver a escanear'
+                ];
+            }
+        }
+
+        // Determinar si es entrada o salida
         if ($ultimoRegistro !== null && strtoupper($ultimoRegistro['tipo_registro']) === 'ENTRADA') {
             $tipoRegistro = 'SALIDA';
         } else {
             $tipoRegistro = 'ENTRADA';
         }
 
+        // Insertar registro
         $sql = "INSERT INTO registro (id_usuario, id_ambiente, tipo_registro)
-                VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
+            VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
 
         $stmt = obtenerConexion()->prepare($sql);
         $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);

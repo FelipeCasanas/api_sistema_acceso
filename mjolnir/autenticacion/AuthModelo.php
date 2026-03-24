@@ -28,7 +28,7 @@ class AuthModelo {
         ];
     }
 
-    public static function login($identificacion) {
+    public static function login($identificacion, $android_id, $nombre_dispositivo) {
 
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -47,7 +47,7 @@ class AuthModelo {
             http_response_code(401);
             return [
                 'success' => false,
-                'message' => 'identificacion incorrecta'
+                'message' => 'Identificación incorrecta'
             ];
         }
 
@@ -59,6 +59,33 @@ class AuthModelo {
             ];
         }
 
+        // =========================================================
+        // 🛡️ LÓGICA DE DEVICE BINDING (AMARRE DE DISPOSITIVO)
+        // =========================================================
+        if ($android_id) {
+            // Si la columna android_id en la base de datos está vacía, es su primera vez
+            if (empty($usuario['android_id'])) {
+                
+                // Lo amarramos a este dispositivo
+                $sql_update = "UPDATE usuario SET android_id = :android_id WHERE id = :id";
+                $stmt_update = $conexion->prepare($sql_update);
+                $stmt_update->bindValue(':android_id', $android_id);
+                $stmt_update->bindValue(':id', $usuario['id']);
+                $stmt_update->execute();
+                
+            } else {
+                // Si NO está vacía, validamos que el ID coincida con el que tenemos guardado
+                if ($usuario['android_id'] !== $android_id) {
+                    http_response_code(403);
+                    return [
+                        'success' => false,
+                        'message' => 'Acceso denegado. Esta cuenta está vinculada a otro dispositivo.'
+                    ];
+                }
+            }
+        }
+
+        // Si pasa la validación, le creamos la sesión
         $_SESSION['usuario'] = [
             'id' => $usuario['id'],
             'nombre' => $usuario['nombre'],
@@ -89,3 +116,4 @@ class AuthModelo {
         ];
     }
 }
+?>

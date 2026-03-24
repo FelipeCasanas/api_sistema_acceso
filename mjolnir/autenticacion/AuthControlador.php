@@ -14,10 +14,16 @@ class AuthControlador {
             return ['success' => false, 'message' => 'Falta el campo obligatorio "identificacion"'];
         }
 
-        return AuthModelo::login($datos['identificacion']);
+        // 👇 Capturamos los datos del dispositivo (si no vienen, se ponen como null)
+        $android_id = $datos['android_id'] ?? null;
+        $nombre_dispositivo = $datos['nombre_dispositivo'] ?? null;
+
+        // Le pasamos los 3 datos al modelo
+        return AuthModelo::login($datos['identificacion'], $android_id, $nombre_dispositivo);
     }
 
     public static function logout() {
         return AuthModelo::logout();
     }
 }
+?>
