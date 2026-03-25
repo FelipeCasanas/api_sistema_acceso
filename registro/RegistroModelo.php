@@ -66,25 +66,6 @@ class RegistroModelo
         ];
     }
 
-    public static function obtenerUltimo($idUsuario, $idAmbiente)
-    {
-        $sql = "SELECT tipo_registro
-                FROM registro
-                WHERE id_usuario = :id_usuario
-                AND id_ambiente = :id_ambiente
-                ORDER BY id DESC
-                LIMIT 1";
-
-        $stmt = obtenerConexion()->prepare($sql);
-        $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
-        $stmt->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return $resultado ? $resultado : null;
-    }
-
     public static function registrar($datos)
     {
         if (!isset($datos['id_usuario']) || !isset($datos['id_ambiente'])) {
@@ -98,16 +79,32 @@ class RegistroModelo
         $idUsuario = $datos['id_usuario'];
         $idAmbiente = $datos['id_ambiente'];
 
-        // Obtener último registro
-        $ultimoRegistro = self::obtenerUltimo($idUsuario, $idAmbiente);
+        $conexion = obtenerConexion();
 
-        // Validación de 5 minutos
-        if ($ultimoRegistro !== null) {
-            $ultimaFecha = strtotime($ultimoRegistro['fecha_registro']);
-            $ahora = time();
+        // 1. Validar los 5 minutos directamente en SQL
+        $sqlValidacion = "SELECT fecha_registro
+                      FROM registro
+                      WHERE id_usuario = :id_usuario
+                      AND id_ambiente = :id_ambiente
+                      AND tipo_registro = 'ENTRADA'
+                      ORDER BY fecha_registro DESC
+                      LIMIT 1";
 
-            if (($ahora - $ultimaFecha) < 300) {
-                $segundosRestantes = 300 - ($ahora - $ultimaFecha);
+        $stmt = $conexion->prepare($sqlValidacion);
+        $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmt->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $ultimo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($ultimo) {
+            $ultimaFecha = new DateTime($ultimo['fecha_registro']);
+            $ahora = new DateTime();
+
+            $diferencia = $ahora->getTimestamp() - $ultimaFecha->getTimestamp();
+
+            if ($diferencia < 300) {
+                $segundosRestantes = 300 - $diferencia;
 
                 return [
                     'success' => false,
@@ -116,23 +113,38 @@ class RegistroModelo
             }
         }
 
-        // Determinar si es entrada o salida
-        if ($ultimoRegistro !== null && strtoupper($ultimoRegistro['tipo_registro']) === 'ENTRADA') {
+        // 2. Obtener último tipo_registro
+        $sqlTipo = "SELECT tipo_registro
+                FROM registro
+                WHERE id_usuario = :id_usuario
+                AND id_ambiente = :id_ambiente
+                ORDER BY id DESC
+                LIMIT 1";
+
+        $stmtTipo = $conexion->prepare($sqlTipo);
+        $stmtTipo->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmtTipo->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
+        $stmtTipo->execute();
+
+        $ultimoTipo = $stmtTipo->fetch(PDO::FETCH_ASSOC);
+
+        // 3. Determinar entrada o salida
+        if ($ultimoTipo && strtoupper($ultimoTipo['tipo_registro']) === 'ENTRADA') {
             $tipoRegistro = 'SALIDA';
         } else {
             $tipoRegistro = 'ENTRADA';
         }
 
-        // Insertar registro
-        $sql = "INSERT INTO registro (id_usuario, id_ambiente, tipo_registro)
-            VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
+        // 4. Insertar
+        $sqlInsert = "INSERT INTO registro (id_usuario, id_ambiente, tipo_registro)
+                  VALUES (:id_usuario, :id_ambiente, :tipo_registro)";
 
-        $stmt = obtenerConexion()->prepare($sql);
-        $stmt->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
-        $stmt->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
-        $stmt->bindParam(':tipo_registro', $tipoRegistro, PDO::PARAM_STR);
+        $stmtInsert = $conexion->prepare($sqlInsert);
+        $stmtInsert->bindParam(':id_usuario', $idUsuario, PDO::PARAM_INT);
+        $stmtInsert->bindParam(':id_ambiente', $idAmbiente, PDO::PARAM_INT);
+        $stmtInsert->bindParam(':tipo_registro', $tipoRegistro, PDO::PARAM_STR);
 
-        if ($stmt->execute()) {
+        if ($stmtInsert->execute()) {
             return [
                 'success' => true,
                 'message' => $tipoRegistro

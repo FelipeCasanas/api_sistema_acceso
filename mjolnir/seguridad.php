@@ -42,7 +42,7 @@ class Seguridad
         $identificacion = self::limpiarTexto($datos['identificacion'] ?? '');
         $celular = self::limpiarTexto($datos['celular'] ?? '');
         $tipoIdentificacion = strtoupper(self::limpiarTexto($datos['tipo_identificacion'] ?? ''));
-        // $cargo = strtoupper(self::limpiarTexto($datos['cargo'] ?? ''));
+        $cargo = strtoupper(self::limpiarTexto($datos['cargo'] ?? ''));
 
         // Validar vacíos
         if (
