@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
 require_once 'UsuarioControlador.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -25,8 +26,8 @@ switch ($metodo) {
                 break;
 
             case isset($_GET['identificacion']):
-            echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
-            break;
+                echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
+                break;
 
             case isset($_GET['cargo']):
                 echo json_encode(UsuarioControlador::obtener('cargo', $_GET['cargo'], $_GET['coincidencia_exacta'] ?? true));
@@ -53,7 +54,7 @@ switch ($metodo) {
         } else {
             echo json_encode(UsuarioControlador::crear($datos));
         }
-    break;
+        break;
 
     case 'PUT':
         echo json_encode(UsuarioControlador::modificar($datos));

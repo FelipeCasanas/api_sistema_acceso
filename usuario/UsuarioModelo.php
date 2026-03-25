@@ -1,5 +1,6 @@
 <?php
 require_once('../mjolnir/conexion/conectar.php');
+require_once('../mjolnir/seguridad.php');
 
 class UsuarioModelo
 {
@@ -23,6 +24,16 @@ class UsuarioModelo
 
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
+        $camposPermitidos = ['id', 'identificacion', 'cargo', 'nombre'];
+
+        if (!in_array($medio_busqueda, $camposPermitidos)) {
+            http_response_code(400);
+            return [
+                'success' => false,
+                'message' => 'Campo de búsqueda inválido'
+            ];
+        }
+
         if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
             $sql = "SELECT * FROM usuario WHERE $medio_busqueda = :dato";
             $consulta = obtenerConexion()->prepare($sql);
@@ -70,25 +81,6 @@ class UsuarioModelo
     public static function crear($datos)
     {
         $conexion = obtenerConexion();
-
-        $camposRequeridos = [
-            'tipo_identificacion',
-            'identificacion',
-            'cargo',
-            'nombre',
-            'correo',
-            'celular'
-        ];
-
-        foreach ($camposRequeridos as $campo) {
-            if (empty($datos[$campo])) {
-                http_response_code(400);
-                return [
-                    'success' => false,
-                    'message' => "Falta el campo requerido: $campo"
-                ];
-            }
-        }
 
         $sql = "SELECT id FROM usuario WHERE identificacion = :identificacion AND activo = :estado";
         $consulta = $conexion->prepare($sql);
@@ -141,15 +133,6 @@ class UsuarioModelo
     {
         $conexion = obtenerConexion();
 
-        $camposRequeridos = [
-            'nombre',
-            'identificacion',
-            'tipo_identificacion',
-            'correo',
-            'telefono',
-            'cargo'
-        ];
-
         $total = count($usuarios);
         $insertados = 0;
         $duplicados = 0;
@@ -158,7 +141,6 @@ class UsuarioModelo
         try {
             $conexion->beginTransaction();
 
-            // Obtener identificaciones ya existentes
             $identificaciones = array_column($usuarios, 'identificacion');
 
             if (!empty($identificaciones)) {
@@ -172,7 +154,6 @@ class UsuarioModelo
                 $existentes = [];
             }
 
-            // Preparar insert
             $sqlInsert = "INSERT INTO usuario 
                 (tipo_identificacion, identificacion, cargo, nombre, correo, celular, activo) 
                 VALUES 
@@ -182,15 +163,22 @@ class UsuarioModelo
 
             foreach ($usuarios as $index => $usuario) {
 
-                // // Validación de campos
-                // foreach ($camposRequeridos as $campo) {
-                //     if (empty($usuario[$campo])) {
-                //         $errores[] = "Fila $index: falta $campo";
-                //         continue 2;
-                //     }
-                // }
+                $validacion = Seguridad::validarUsuario([
+                    'nombre' => $usuario['nombre'] ?? '',
+                    'correo' => $usuario['correo'] ?? '',
+                    'identificacion' => $usuario['identificacion'] ?? '',
+                    'celular' => $usuario['telefono'] ?? '',
+                    'tipo_identificacion' => $usuario['tipo_identificacion'] ?? '',
+                    'cargo' => $usuario['cargo'] ?? ''
+                ]);
 
-                // Validar duplicado
+                if (!$validacion['valido']) {
+                    $errores[] = "Fila $index: " . $validacion['mensaje'];
+                    continue;
+                }
+
+                $usuario = $validacion['datos'];
+
                 if (in_array($usuario['identificacion'], $existentes)) {
                     $duplicados++;
                     continue;
@@ -203,7 +191,7 @@ class UsuarioModelo
                         ':cargo' => $usuario['cargo'],
                         ':nombre' => $usuario['nombre'],
                         ':correo' => $usuario['correo'],
-                        ':celular' => $usuario['telefono']
+                        ':celular' => $usuario['celular']
                     ]);
 
                     $insertados++;
@@ -241,31 +229,6 @@ class UsuarioModelo
 
     public static function modificar($id, $datos)
     {
-        $camposValidos = [
-            'tipo_identificacion',
-            'identificacion',
-            'cargo',
-            'nombre',
-            'correo',
-            'celular'
-        ];
-
-        $datosFiltrados = [];
-
-        foreach ($camposValidos as $campo) {
-            if (!empty($datos[$campo])) {
-                $datosFiltrados[$campo] = $datos[$campo];
-            }
-        }
-
-        if (empty($datosFiltrados)) {
-            http_response_code(400);
-            return [
-                'success' => false,
-                'message' => 'No se enviaron datos para actualizar'
-            ];
-        }
-
         $sql = "SELECT id FROM usuario WHERE id = :id";
         $consulta = obtenerConexion()->prepare($sql);
         $consulta->bindValue(':id', $id);
@@ -280,14 +243,14 @@ class UsuarioModelo
         }
 
         $set = [];
-        foreach ($datosFiltrados as $campo => $valor) {
+        foreach ($datos as $campo => $valor) {
             $set[] = "$campo = :$campo";
         }
 
         $sql = "UPDATE usuario SET " . implode(", ", $set) . " WHERE id = :id";
         $consulta = obtenerConexion()->prepare($sql);
 
-        foreach ($datosFiltrados as $campo => $valor) {
+        foreach ($datos as $campo => $valor) {
             $consulta->bindValue(":$campo", $valor);
         }
 

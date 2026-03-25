@@ -24,6 +24,16 @@ class PermisoModelo
     {
         $conexion = obtenerConexion();
 
+        $camposPermitidos = ['id', 'id_usuario', 'tipo_permiso', 'estado'];
+
+        if (!in_array($medio_busqueda, $camposPermitidos)) {
+            http_response_code(400);
+            return [
+                'success' => false,
+                'message' => 'Campo de búsqueda inválido'
+            ];
+        }
+
         if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
 
             $sql = "SELECT 
@@ -112,41 +122,7 @@ class PermisoModelo
 
     public static function crear($datos)
     {
-        $camposRequeridos = [
-            'id_usuario',
-            'tipo_permiso',
-            'descripcion',
-            'comprobante',
-            'estado'
-        ];
-
-        foreach ($camposRequeridos as $campo) {
-            if (empty($datos[$campo])) {
-                http_response_code(400);
-                return [
-                    'success' => false,
-                    'message' => "Falta el campo requerido: $campo"
-                ];
-            }
-        }
-
         $conexion = obtenerConexion();
-
-        if (!empty($datos['id'])) {
-
-            $sql = "SELECT id FROM permiso WHERE id = :id";
-            $stmt = $conexion->prepare($sql);
-            $stmt->bindValue(':id', $datos['id']);
-            $stmt->execute();
-
-            if ($stmt->fetch()) {
-                http_response_code(409);
-                return [
-                    'success' => false,
-                    'message' => 'Ya existe un permiso con esa identificacion'
-                ];
-            }
-        }
 
         $sql = "INSERT INTO permiso 
                 (id_usuario, tipo_permiso, descripcion, comprobante, estado) 
