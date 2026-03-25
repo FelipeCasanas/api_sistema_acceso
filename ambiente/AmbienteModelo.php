@@ -23,14 +23,18 @@ class AmbienteModelo
 
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
-        if (empty($medio_busqueda)) {
+        $conexion = obtenerConexion();
+
+        // PROTEGER COLUMNAS
+        $camposPermitidos = ['id', 'bloque', 'sitio'];
+
+        if (!in_array($medio_busqueda, $camposPermitidos)) {
+            http_response_code(400);
             return [
                 'success' => false,
-                'message' => 'No se definio argumento de busqueda'
+                'message' => 'Campo de búsqueda inválido'
             ];
         }
-
-        $conexion = obtenerConexion();
 
         if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
 
@@ -119,10 +123,10 @@ class AmbienteModelo
         $conexion = obtenerConexion();
 
         $sql = "SELECT id 
-        FROM ambiente 
-        WHERE bloque = :bloque 
-        AND sitio = :sitio 
-        LIMIT 1";
+                FROM ambiente 
+                WHERE bloque = :bloque 
+                AND sitio = :sitio 
+                LIMIT 1";
 
         $stmtConsulta = $conexion->prepare($sql);
         $stmtConsulta->bindParam(':bloque', $datos['bloque']);
@@ -159,11 +163,7 @@ class AmbienteModelo
 
     public static function modificar($datos)
     {
-        $camposValidos = [
-            'id_creador',
-            'bloque',
-            'sitio'
-        ];
+        $camposValidos = ['id_creador', 'bloque', 'sitio'];
 
         $datosFiltrados = [];
         $id = $datos['id'];
