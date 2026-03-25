@@ -1,15 +1,19 @@
 <?php
-require_once('../../mjolnir/conexion/conectar.php');
+require_once('../conexion/conectar.php');
+require_once('../seguridad.php');
 
 class AuthModelo {
 
     public static function verificarSesion($token) {
 
-        if (session_id() !== $token) {
-            session_id($token);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
 
-        if (session_status() === PHP_SESSION_NONE) {
+        // Validar token antes de usarlo
+        if (!empty($token) && session_id() !== $token) {
+            session_write_close();
+            session_id($token);
             session_start();
         }
 
@@ -59,22 +63,18 @@ class AuthModelo {
             ];
         }
 
-        // =========================================================
-        // 🛡️ LÓGICA DE DEVICE BINDING (AMARRE DE DISPOSITIVO)
-        // =========================================================
         if ($android_id) {
-            // Si la columna android_id en la base de datos está vacía, es su primera vez
+
             if (empty($usuario['android_id'])) {
-                
-                // Lo amarramos a este dispositivo
+
                 $sql_update = "UPDATE usuario SET android_id = :android_id WHERE id = :id";
                 $stmt_update = $conexion->prepare($sql_update);
                 $stmt_update->bindValue(':android_id', $android_id);
                 $stmt_update->bindValue(':id', $usuario['id']);
                 $stmt_update->execute();
-                
+
             } else {
-                // Si NO está vacía, validamos que el ID coincida con el que tenemos guardado
+
                 if ($usuario['android_id'] !== $android_id) {
                     http_response_code(403);
                     return [
@@ -85,7 +85,6 @@ class AuthModelo {
             }
         }
 
-        // Si pasa la validación, le creamos la sesión
         $_SESSION['usuario'] = [
             'id' => $usuario['id'],
             'nombre' => $usuario['nombre'],
@@ -116,4 +115,3 @@ class AuthModelo {
         ];
     }
 }
-?>
