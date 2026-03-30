@@ -1,14 +1,12 @@
 <?php
 require_once('../mjolnir/conexion/conectar.php');
-require_once('../mjolnir/conexion/gestor_consultas.php');
 
 class PermisoModelo
 {
 
     public static function obtenerTotal()
     {
-        $sql = "SELECT COUNT(*) AS total
-                FROM permiso";
+        $sql = "SELECT COUNT(*) AS total FROM permiso";
 
         $stmt = obtenerConexion()->prepare($sql);
         $stmt->execute();
@@ -24,24 +22,58 @@ class PermisoModelo
 
     public static function obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta)
     {
-        if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN) === true) {
-            list($sql, $parametros) = construirQuery(
-                'permiso',
-                [],
-                'SELECT',
-                [$medio_busqueda => $dato_busqueda]
-            );
+        $conexion = obtenerConexion();
 
-        } else {
-            list($sql, $parametros) = construirQuery(
-                'permiso',
-                [],
-                'SELECT',
-                [$medio_busqueda => ['LIKE', "%$dato_busqueda%"]]
-            );
+        $camposPermitidos = ['id', 'id_usuario', 'tipo_permiso', 'estado'];
+
+        if (!in_array($medio_busqueda, $camposPermitidos)) {
+            http_response_code(400);
+            return [
+                'success' => false,
+                'message' => 'Campo de búsqueda inválido'
+            ];
         }
 
-        $stmt = ejecutarQuery($sql, $parametros);
+        if (filter_var($coincidencia_exacta, FILTER_VALIDATE_BOOLEAN)) {
+
+            $sql = "SELECT 
+                        p.id,
+                        p.id_usuario,
+                        u.nombre AS nombre_usuario,
+                        p.tipo_permiso,
+                        p.descripcion,
+                        p.comprobante,
+                        p.estado,
+                        p.fecha_creacion,
+                        p.fecha_estado
+                    FROM permiso p
+                    JOIN usuario u ON p.id_usuario = u.id
+                    WHERE p.$medio_busqueda = :dato";
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->bindValue(':dato', $dato_busqueda);
+
+        } else {
+
+            $sql = "SELECT 
+                        p.id,
+                        p.id_usuario,
+                        u.nombre AS nombre_usuario,
+                        p.tipo_permiso,
+                        p.descripcion,
+                        p.comprobante,
+                        p.estado,
+                        p.fecha_creacion,
+                        p.fecha_estado
+                    FROM permiso p
+                    JOIN usuario u ON p.id_usuario = u.id
+                    WHERE p.$medio_busqueda LIKE :dato";
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->bindValue(':dato', "%$dato_busqueda%");
+        }
+
+        $stmt->execute();
         $permisos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($permisos)) {
@@ -50,11 +82,6 @@ class PermisoModelo
                 'success' => false,
                 'message' => 'permiso no encontrado'
             ];
-        }
-
-        // Eliminar contraseña de cada resultado
-        foreach ($permisos as &$permiso) {
-            unset($permiso['contrasena']);
         }
 
         return [
@@ -66,14 +93,25 @@ class PermisoModelo
 
     public static function obtenerTodos()
     {
-        list($sql, $parametros) = construirQuery('permiso', [], 'SELECT', []);
-        $stmt = ejecutarQuery($sql, $parametros);
+        $conexion = obtenerConexion();
 
-        $permisos = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            unset($row['contrasena']);
-            $permisos[] = $row;
-        }
+        $sql = "SELECT 
+                    p.id,
+                    p.id_usuario,
+                    u.nombre AS nombre_usuario,
+                    p.tipo_permiso,
+                    p.descripcion,
+                    p.comprobante,
+                    p.estado,
+                    p.fecha_creacion,
+                    p.fecha_estado
+                FROM permiso p
+                JOIN usuario u ON p.id_usuario = u.id";
+
+        $stmt = $conexion->prepare($sql);
+        $stmt->execute();
+
+        $permisos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return [
             'success' => true,
@@ -84,62 +122,63 @@ class PermisoModelo
 
     public static function crear($datos)
     {
-        $camposRequeridos = [
-            'id_usuario',
-            'tipo_permiso',
-            'descripcion',
-            'comprobante',
-            'estado'
-        ];
+        $conexion = obtenerConexion();
 
-        foreach ($camposRequeridos as $campo) {
-            if (empty($datos[$campo])) {
-                http_response_code(400);
-                return ['success' => false, 'message' => "Falta el campo requerido: $campo"];
-            }
-        }
+        $sql = "INSERT INTO permiso 
+                (id_usuario, tipo_permiso, descripcion, comprobante, estado) 
+                VALUES 
+                (:id_usuario, :tipo_permiso, :descripcion, :comprobante, :estado)";
 
-        $condicion = $datos['id'];
+        $stmt = $conexion->prepare($sql);
 
-        list($sql, $parametros) = construirQuery('permiso', [], 'SELECT', ['id' => $condicion]);
-        $stmt = ejecutarQuery($sql, $parametros);
-        $permisos = procesarResultado($stmt, 'SELECT');
+        $stmt->bindValue(':id_usuario', $datos['id_usuario']);
+        $stmt->bindValue(':tipo_permiso', $datos['tipo_permiso']);
+        $stmt->bindValue(':descripcion', $datos['descripcion']);
+        $stmt->bindValue(':comprobante', $datos['comprobante']);
+        $stmt->bindValue(':estado', $datos['estado']);
 
-        if (!empty($permisos)) {
-            http_response_code(409);
-            return ['success' => false, 'message' => 'Ya existe un permiso con esa identificacion'];
-        }
-
-        list($sql, $parametros) = construirQuery('permiso', $datos, 'INSERT');
-        $respuesta = ejecutarQuery($sql, $parametros);
-
-        if (!$respuesta) {
+        if (!$stmt->execute()) {
             http_response_code(500);
-            return ['success' => false, 'message' => 'Error al crear el permiso'];
+            return [
+                'success' => false,
+                'message' => 'Error al crear el permiso'
+            ];
         }
 
-        return ['success' => true, 'message' => 'permiso creado exitosamente'];
+        return [
+            'success' => true,
+            'message' => 'permiso creado exitosamente'
+        ];
     }
 
     public static function modificar($datos)
     {
-        // Verifica existencia
-        list($sql, $parametros) = construirQuery('permiso', [], 'SELECT', ['id' => $datos['id']]);
-        $stmt = ejecutarQuery($sql, $parametros);
-        $permisos = procesarResultado($stmt, 'SELECT');
+        $conexion = obtenerConexion();
 
-        if (empty($permisos)) {
+        $sql = "SELECT id FROM permiso WHERE id = :id";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':id', $datos['id']);
+        $stmt->execute();
+
+        if (!$stmt->fetch()) {
             http_response_code(404);
-            return ['success' => false, 'message' => 'El permiso no existe'];
+            return [
+                'success' => false,
+                'message' => 'El permiso no existe'
+            ];
         }
 
-        // Actualizar
-        list($sql, $parametros) = construirQuery('permiso', ['estado' => $datos['estado']], 'UPDATE', ['id' => $datos['id']]);
-        $stmt = ejecutarQuery($sql, $parametros);
+        $sql = "UPDATE permiso SET estado = :estado WHERE id = :id";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':estado', $datos['estado']);
+        $stmt->bindValue(':id', $datos['id']);
+        $stmt->execute();
 
         return [
             'success' => $stmt->rowCount() > 0,
-            'message' => $stmt->rowCount() > 0 ? 'permiso actualizado correctamente' : 'No se realizaron cambios en el permiso'
+            'message' => $stmt->rowCount() > 0
+                ? 'permiso actualizado correctamente'
+                : 'No se realizaron cambios en el permiso'
         ];
     }
 }

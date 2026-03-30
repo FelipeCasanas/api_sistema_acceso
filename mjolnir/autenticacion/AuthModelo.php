@@ -1,16 +1,28 @@
 <?php
-require_once('../../mjolnir/conexion/conectar.php');
-require_once('../../mjolnir/conexion/gestor_consultas.php');
+require_once('../conexion/conectar.php');
+require_once('../seguridad.php');
 
 class AuthModelo {
 
     public static function verificarSesion($token) {
-        if (session_id() !== $token) session_id($token);
-        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Validar token antes de usarlo
+        if (!empty($token) && session_id() !== $token) {
+            session_write_close();
+            session_id($token);
+            session_start();
+        }
 
         if (empty($_SESSION['usuario'])) {
             http_response_code(401);
-            return ['success' => false, 'message' => 'Sesión no iniciada'];
+            return [
+                'success' => false,
+                'message' => 'Sesión no iniciada'
+            ];
         }
 
         return [
@@ -20,23 +32,57 @@ class AuthModelo {
         ];
     }
 
-    public static function login($identificacion) {
+    public static function login($identificacion, $android_id, $nombre_dispositivo) {
+
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        list($sql, $parametros) = construirQuery('usuario', [], 'SELECT', ['identificacion' => $identificacion]);
-        $stmt = ejecutarQuery($sql, $parametros);
+        $conexion = obtenerConexion();
+
+        $sql = "SELECT * FROM usuario WHERE identificacion = :identificacion LIMIT 1";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':identificacion', $identificacion);
+        $stmt->execute();
+
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$usuario) {
             http_response_code(401);
-            return ['success' => false, 'message' => 'identificacion incorrecta'];
+            return [
+                'success' => false,
+                'message' => 'Identificación incorrecta'
+            ];
         }
 
         if (!$usuario['activo']) {
             http_response_code(403);
-            return ['success' => false, 'message' => 'Usuario inactivo'];
+            return [
+                'success' => false,
+                'message' => 'Usuario inactivo'
+            ];
+        }
+
+        if ($android_id) {
+
+            if (empty($usuario['android_id'])) {
+
+                $sql_update = "UPDATE usuario SET android_id = :android_id WHERE id = :id";
+                $stmt_update = $conexion->prepare($sql_update);
+                $stmt_update->bindValue(':android_id', $android_id);
+                $stmt_update->bindValue(':id', $usuario['id']);
+                $stmt_update->execute();
+
+            } else {
+
+                if ($usuario['android_id'] !== $android_id) {
+                    http_response_code(403);
+                    return [
+                        'success' => false,
+                        'message' => 'Acceso denegado. Esta cuenta está vinculada a otro dispositivo.'
+                    ];
+                }
+            }
         }
 
         $_SESSION['usuario'] = [
@@ -55,10 +101,17 @@ class AuthModelo {
     }
 
     public static function logout() {
-        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         session_unset();
         session_destroy();
 
-        return ['success' => true, 'message' => 'Sesión cerrada correctamente'];
+        return [
+            'success' => true,
+            'message' => 'Sesión cerrada correctamente'
+        ];
     }
 }

@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
 require_once('AuthControlador.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -11,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 session_start();
+
 $metodo = $_SERVER['REQUEST_METHOD'];
 $datos = json_decode(file_get_contents("php://input"), true) ?? [];
 

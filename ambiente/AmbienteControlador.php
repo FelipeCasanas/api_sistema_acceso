@@ -1,5 +1,6 @@
 <?php
 require_once('AmbienteModelo.php');
+require_once('../mjolnir/seguridad.php');
 
 class AmbienteControlador {
 
@@ -13,7 +14,9 @@ class AmbienteControlador {
             http_response_code(400);
             return ['success' => false, 'message' => 'No se recibió el medio de busqueda'];
         }
-        
+
+        $dato_busqueda = Seguridad::limpiarTexto($dato_busqueda);
+
         return AmbienteModelo::obtener($medio_busqueda, $dato_busqueda, $coincidencia_exacta);
     }
 
@@ -28,6 +31,11 @@ class AmbienteControlador {
             return ['success' => false, 'message' => 'Faltan datos obligatorios'];
         }
 
+        // Sanitizar
+        foreach ($datos as $key => $value) {
+            $datos[$key] = Seguridad::limpiarTexto($value);
+        }
+
         return AmbienteModelo::crear($datos);
     }
 
@@ -36,6 +44,10 @@ class AmbienteControlador {
         if (empty($datos['id'])) {
             http_response_code(400);
             return ['success' => false, 'message' => 'Falta el ID del ambiente'];
+        }
+
+        foreach ($datos as $key => $value) {
+            $datos[$key] = Seguridad::limpiarTexto($value);
         }
 
         return AmbienteModelo::modificar($datos);

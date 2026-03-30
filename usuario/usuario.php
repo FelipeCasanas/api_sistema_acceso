@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
 require_once 'UsuarioControlador.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -19,16 +20,21 @@ switch ($metodo) {
             case isset($_GET['total']):
                 echo json_encode(UsuarioControlador::obtenerTotal());
                 break;
+
             case isset($_GET['id']):
                 echo json_encode(UsuarioControlador::obtener('id', $_GET['id'], true));
                 break;
 
-            case isset($_GET['nombre']):
-                echo json_encode(UsuarioControlador::obtener('nombre', $_GET['nombre'], $_GET['coincidencia_exacta'] ?? true));
-                break;
-
             case isset($_GET['identificacion']):
                 echo json_encode(UsuarioControlador::obtener('identificacion', $_GET['identificacion'], $_GET['coincidencia_exacta'] ?? true));
+                break;
+
+            case isset($_GET['cargo']):
+                echo json_encode(UsuarioControlador::obtener('cargo', $_GET['cargo'], $_GET['coincidencia_exacta'] ?? true));
+                break;
+
+            case isset($_GET['nombre']):
+                echo json_encode(UsuarioControlador::obtener('nombre', $_GET['nombre'], $_GET['coincidencia_exacta'] ?? true));
                 break;
 
             case isset($_GET['todos']) && $_GET['todos'] === 'true':
@@ -41,7 +47,13 @@ switch ($metodo) {
         break;
 
     case 'POST':
-        echo json_encode(UsuarioControlador::crear($datos));
+        if (!empty($datos['masivo']) && $datos['masivo'] === true) {
+            echo json_encode(
+                UsuarioControlador::cargaMasiva($datos['usuarios'] ?? [])
+            );
+        } else {
+            echo json_encode(UsuarioControlador::crear($datos));
+        }
         break;
 
     case 'PUT':

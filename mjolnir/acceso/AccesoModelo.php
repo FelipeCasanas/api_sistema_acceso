@@ -1,18 +1,31 @@
 <?php
-require_once('../../mjolnir/conexion/conectar.php');
-require_once('../../mjolnir/conexion/gestor_consultas.php');
+require_once('../conexion/conectar.php');
 
-class AccesoModelo {
+class AccesoModelo
+{
 
-    public static function obtener() {
-        list($sql, $params) = construirQuery('acceso', [], 'SELECT', []);
-        $sql .= " ORDER BY fecha_acceso DESC";
+    public static function obtener($data)
+    {
+        $conexion = obtenerConexion();
 
-        $stmt = ejecutarQuery($sql, $params);
-        $accesos = [];
+        $sql = "SELECT * FROM acceso 
+            WHERE id_usuario = :id_usuario 
+            AND android_id = :android_id 
+            ORDER BY fecha_acceso DESC";
 
-        while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $accesos[] = $fila;
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(':id_usuario', $data['id_usuario']);
+        $stmt->bindValue(':android_id', $data['android_id']);
+        $stmt->execute();
+
+        $accesos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($accesos)) {
+            return [
+                'success' => false,
+                'message' => 'No se encontraron accesos',
+                'data' => null
+            ];
         }
 
         return [
@@ -21,21 +34,57 @@ class AccesoModelo {
             'data' => $accesos
         ];
     }
-    
-    public static function registrar($datos) {
-        $acceso = [
-            'android_id' => $datos['android_id'],
-            'medio_acceso' => $datos['medio_acceso']
-        ];
 
-        list($sql, $params) = construirQuery('acceso', $acceso, 'INSERT');
-        $stmt = ejecutarQuery($sql, $params);
+    public static function registrar($datos)
+    {
+        try {
+            $conexion = obtenerConexion();
 
-        if ($stmt) {
-            return ['success' => true, 'message' => 'Acceso registrado exitosamente'];
-        } else {
+            // Validar si ya existe el acceso para ese usuario y dispositivo
+            $sql = "SELECT 1 FROM acceso 
+                WHERE id_usuario = :id_usuario 
+                AND android_id = :android_id 
+                LIMIT 1";
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->bindValue(':id_usuario', $datos['id_usuario']);
+            $stmt->bindValue(':android_id', $datos['android_id']);
+            $stmt->execute();
+
+            if ($stmt->fetch()) {
+                return [
+                    'success' => false,
+                    'message' => 'El usuario ya ha registrado un acceso con este dispositivo'
+                ];
+            }
+
+            // Insertar acceso
+            $sql = "INSERT INTO acceso (id_usuario, android_id, medio_acceso)
+                VALUES (:id_usuario, :android_id, :medio_acceso)";
+
+            $stmt = $conexion->prepare($sql);
+            $stmt->bindValue(':id_usuario', $datos['id_usuario']);
+            $stmt->bindValue(':android_id', $datos['android_id']);
+            $stmt->bindValue(':medio_acceso', $datos['medio_acceso']);
+
+            if ($stmt->execute()) {
+                return [
+                    'success' => true,
+                    'message' => 'Acceso registrado exitosamente'
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Error al registrar el acceso'
+            ];
+
+        } catch (Exception $e) {
             http_response_code(500);
-            return ['success' => false, 'message' => 'Error al registrar el acceso'];
+            return [
+                'success' => false,
+                'message' => 'Error interno del servidor'
+            ];
         }
     }
 }
