@@ -1,6 +1,6 @@
 <?php
 require_once('../mjolnir/seguridad.php');
-proteger();
+Seguridad::proteger();
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
