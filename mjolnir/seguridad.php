@@ -81,57 +81,155 @@ class Seguridad
         return mb_strlen($texto, 'UTF-8') == $longitud;
     }
 
-    public static function validarUsuario($datos)
+    public static function validarUsuario($datos, $requerirTodos = true)
     {
-        $nombre = self::normalizarEspacios(self::limpiarTexto($datos['nombre'] ?? ''));
-        $correo = trim(self::limpiarTexto($datos['correo'] ?? ''));
-        $identificacion = self::limpiarTexto($datos['identificacion'] ?? '');
-        $celular = self::limpiarTexto($datos['celular'] ?? '');
-        $tipoIdentificacion = strtoupper(self::limpiarTexto($datos['tipo_identificacion'] ?? ''));
-        $cargo = self::limpiarTexto($datos['cargo'] ?? '');
+        $nombre = isset($datos['nombre'])
+            ? self::normalizarEspacios(self::limpiarTexto($datos['nombre']))
+            : null;
 
-        if (
-            empty($nombre) ||
-            empty($correo) ||
-            empty($identificacion) ||
-            empty($celular) ||
-            empty($tipoIdentificacion)
-        ) {
-            return ['valido' => false, 'mensaje' => 'Todos los campos son obligatorios'];
+        $correo = isset($datos['correo'])
+            ? trim(self::limpiarTexto($datos['correo']))
+            : null;
+
+        $identificacion = isset($datos['identificacion'])
+            ? self::limpiarTexto($datos['identificacion'])
+            : null;
+
+        $celular = isset($datos['celular'])
+            ? self::limpiarTexto($datos['celular'])
+            : null;
+
+        $tipoIdentificacion = isset($datos['tipo_identificacion'])
+            ? strtoupper(self::limpiarTexto($datos['tipo_identificacion']))
+            : null;
+
+        $cargo = isset($datos['cargo'])
+            ? self::limpiarTexto($datos['cargo'])
+            : null;
+
+        if ($requerirTodos) {
+            if (
+                empty($nombre) ||
+                empty($correo) ||
+                empty($identificacion) ||
+                empty($celular) ||
+                empty($tipoIdentificacion)
+            ) {
+                return ['valido' => false, 'mensaje' => 'Todos los campos son obligatorios'];
+            }
         }
 
-        if (!self::soloLetras($nombre)) {
+        if ($nombre !== null && !self::soloLetras($nombre)) {
             return ['valido' => false, 'mensaje' => 'El nombre solo puede contener letras y espacios'];
         }
 
-        if (!self::soloNumeros($identificacion)) {
+        if ($identificacion !== null && !self::soloNumeros($identificacion)) {
             return ['valido' => false, 'mensaje' => 'La identificación solo debe contener números'];
         }
 
-        if (!self::soloNumeros($celular) || !self::longitudExacta($celular, 10)) {
-            return ['valido' => false, 'mensaje' => 'El celular debe tener 10 dígitos'];
+        if ($celular !== null) {
+            if (!self::soloNumeros($celular) || !self::longitudExacta($celular, 10)) {
+                return ['valido' => false, 'mensaje' => 'El celular debe tener 10 dígitos'];
+            }
         }
 
-        if (!self::validarEmail($correo)) {
+        if ($correo !== null && !self::validarEmail($correo)) {
             return ['valido' => false, 'mensaje' => 'Correo inválido'];
         }
 
         $tiposPermitidos = ['CC', 'TI', 'CE', 'PASAPORTE'];
 
-        if (!in_array($tipoIdentificacion, $tiposPermitidos)) {
+        if ($tipoIdentificacion !== null && !in_array($tipoIdentificacion, $tiposPermitidos)) {
             return ['valido' => false, 'mensaje' => 'Tipo de identificación inválido'];
+        }
+
+        $datosLimpios = [];
+
+        if ($nombre !== null)
+            $datosLimpios['nombre'] = $nombre;
+        if ($correo !== null)
+            $datosLimpios['correo'] = $correo;
+        if ($identificacion !== null)
+            $datosLimpios['identificacion'] = $identificacion;
+        if ($celular !== null)
+            $datosLimpios['celular'] = $celular;
+        if ($tipoIdentificacion !== null)
+            $datosLimpios['tipo_identificacion'] = $tipoIdentificacion;
+        if ($cargo !== null)
+            $datosLimpios['cargo'] = $cargo;
+
+        return [
+            'valido' => true,
+            'datos' => $datosLimpios
+        ];
+    }
+
+    public static function validarUsuarioParcial($datos)
+    {
+        $datosLimpios = [];
+
+        if (isset($datos['nombre'])) {
+            $nombre = self::normalizarEspacios(self::limpiarTexto($datos['nombre']));
+
+            if (!self::soloLetras($nombre)) {
+                return ['valido' => false, 'mensaje' => 'El nombre solo puede contener letras y espacios'];
+            }
+
+            $datosLimpios['nombre'] = $nombre;
+        }
+
+        if (isset($datos['correo'])) {
+            $correo = trim(self::limpiarTexto($datos['correo']));
+
+            if (!self::validarEmail($correo)) {
+                return ['valido' => false, 'mensaje' => 'Correo inválido'];
+            }
+
+            $datosLimpios['correo'] = $correo;
+        }
+
+        if (isset($datos['identificacion'])) {
+            $identificacion = self::limpiarTexto($datos['identificacion']);
+
+            if (!self::soloNumeros($identificacion)) {
+                return ['valido' => false, 'mensaje' => 'La identificación solo debe contener números'];
+            }
+
+            $datosLimpios['identificacion'] = $identificacion;
+        }
+
+        if (isset($datos['celular'])) {
+            $celular = self::limpiarTexto($datos['celular']);
+
+            if (!self::soloNumeros($celular) || !self::longitudExacta($celular, 10)) {
+                return ['valido' => false, 'mensaje' => 'El celular debe tener 10 dígitos'];
+            }
+
+            $datosLimpios['celular'] = $celular;
+        }
+
+        if (isset($datos['tipo_identificacion'])) {
+            $tipo = strtoupper(self::limpiarTexto($datos['tipo_identificacion']));
+            $tiposPermitidos = ['CC', 'TI', 'CE', 'PASAPORTE'];
+
+            if (!in_array($tipo, $tiposPermitidos)) {
+                return ['valido' => false, 'mensaje' => 'Tipo de identificación inválido'];
+            }
+
+            $datosLimpios['tipo_identificacion'] = $tipo;
+        }
+
+        if (isset($datos['cargo'])) {
+            $datosLimpios['cargo'] = self::limpiarTexto($datos['cargo']);
+        }
+
+        if (empty($datosLimpios)) {
+            return ['valido' => false, 'mensaje' => 'No se enviaron datos para actualizar'];
         }
 
         return [
             'valido' => true,
-            'datos' => [
-                'nombre' => $nombre,
-                'correo' => $correo,
-                'identificacion' => $identificacion,
-                'celular' => $celular,
-                'tipo_identificacion' => $tipoIdentificacion,
-                'cargo' => $cargo
-            ]
+            'datos' => $datosLimpios
         ];
     }
 }

@@ -59,7 +59,7 @@ class UsuarioControlador {
             return ['success' => false, 'message' => 'No se recibió el ID del usuario'];
         }
 
-        $validacion = Seguridad::validarUsuario($datos);
+        $validacion = Seguridad::validarUsuarioParcial($datos);
 
         if (!$validacion['valido']) {
             http_response_code(400);
