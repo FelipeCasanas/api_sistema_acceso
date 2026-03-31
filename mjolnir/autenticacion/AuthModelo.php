@@ -83,7 +83,8 @@ class AuthModelo
             'success' => true,
             'message' => 'Inicio de sesión exitoso',
             'data' => [
-                'usuario' => $_SESSION['usuario'],
+                'id' => $usuario['id'],
+                'nombre' => $_SESSION['usuario'],
                 'cargo' => $usuario['cargo']
             ],
             'session_token' => session_id()
