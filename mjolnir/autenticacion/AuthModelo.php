@@ -2,20 +2,13 @@
 require_once('../conexion/conectar.php');
 require_once('../seguridad.php');
 
-class AuthModelo {
+class AuthModelo
+{
 
-    public static function verificarSesion($token) {
+    public static function verificarSesion()
+    {
 
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        // Validar token antes de usarlo
-        if (!empty($token) && session_id() !== $token) {
-            session_write_close();
-            session_id($token);
-            session_start();
-        }
+        Seguridad::iniciarSesion();
 
         if (empty($_SESSION['usuario'])) {
             http_response_code(401);
@@ -32,11 +25,10 @@ class AuthModelo {
         ];
     }
 
-    public static function login($identificacion, $android_id, $nombre_dispositivo) {
+    public static function login($identificacion, $android_id, $nombre_dispositivo)
+    {
 
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Seguridad::iniciarSesion();
 
         $conexion = obtenerConexion();
 
@@ -85,29 +77,23 @@ class AuthModelo {
             }
         }
 
-        $_SESSION['usuario'] = [
-            'id' => $usuario['id'],
-            'nombre' => $usuario['nombre'],
-            'identificacion' => $usuario['identificacion'],
-            'cargo' => $usuario['cargo']
-        ];
+        Seguridad::crearSesion($usuario);
 
         return [
             'success' => true,
             'message' => 'Inicio de sesión exitoso',
-            'data' => $_SESSION['usuario'],
+            'data' => [
+                'usuario' => $_SESSION['usuario'],
+                'cargo' => $usuario['cargo']
+            ],
             'session_token' => session_id()
         ];
     }
 
-    public static function logout() {
+    public static function logout()
+    {
 
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        session_unset();
-        session_destroy();
+        Seguridad::cerrarSesion();
 
         return [
             'success' => true,

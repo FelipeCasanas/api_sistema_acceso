@@ -4,13 +4,23 @@ require_once('../seguridad.php');
 
 class AuthControlador {
 
-    public static function verificarSesion($datos) {
+    public static function verificarSesion() {
 
-        $token = $datos['session_token'] ?? session_id();
+        Seguridad::iniciarSesion();
 
-        $token = Seguridad::limpiarTexto($token);
+        if (empty($_SESSION['usuario'])) {
+            http_response_code(401);
+            return [
+                'success' => false,
+                'message' => 'Sesión no iniciada'
+            ];
+        }
 
-        return AuthModelo::verificarSesion($token);
+        return [
+            'success' => true,
+            'message' => 'Sesión activa',
+            'data' => $_SESSION['usuario']
+        ];
     }
 
     public static function login($datos) {

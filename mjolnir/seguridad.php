@@ -1,6 +1,54 @@
 <?php
+header('Content-Type: application/json');
+
 class Seguridad
 {
+    public static function iniciarSesion()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_set_cookie_params([
+                'httponly' => true,
+                'secure' => false,
+                'samesite' => 'Lax'
+            ]);
+            session_start();
+        }
+
+        if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
+            session_unset();
+            session_destroy();
+        }
+
+        $_SESSION['LAST_ACTIVITY'] = time();
+    }
+
+    public static function proteger()
+    {
+        self::iniciarSesion();
+
+        if (!isset($_SESSION['usuario_id'])) {
+            http_response_code(401);
+            echo json_encode(['error' => 'No autorizado']);
+            exit();
+        }
+    }
+
+    public static function crearSesion($usuario)
+    {
+        self::iniciarSesion();
+        session_regenerate_id(true);
+
+        $_SESSION['usuario_id'] = $usuario['id'];
+        $_SESSION['usuario'] = $usuario['nombre'] ?? '';
+    }
+
+    public static function cerrarSesion()
+    {
+        self::iniciarSesion();
+        session_unset();
+        session_destroy();
+    }
+
     public static function limpiarTexto($texto)
     {
         $texto = trim($texto);
