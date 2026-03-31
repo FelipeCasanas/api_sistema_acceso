@@ -30,7 +30,6 @@ class PermisoControlador {
             'id_usuario',
             'tipo_permiso',
             'descripcion',
-            'comprobante',
             'estado'
         ];
 
