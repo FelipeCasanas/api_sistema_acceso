@@ -1,6 +1,5 @@
 <?php
-require_once 'RegistroModelo.php';
-require_once('../mjolnir/seguridad.php');
+require_once('RegistroModelo.php');
 
 class RegistroControlador {
 

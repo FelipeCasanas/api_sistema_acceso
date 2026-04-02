@@ -4,23 +4,8 @@ require_once('../seguridad.php');
 
 class AuthControlador {
 
-    public static function verificarSesion() {
-
-        Seguridad::iniciarSesion();
-
-        if (empty($_SESSION['usuario'])) {
-            http_response_code(401);
-            return [
-                'success' => false,
-                'message' => 'Sesión no iniciada'
-            ];
-        }
-
-        return [
-            'success' => true,
-            'message' => 'Sesión activa',
-            'data' => $_SESSION['usuario']
-        ];
+    public static function verificarSesion($datos) {
+        return AuthModelo::verificarSesion();
     }
 
     public static function login($datos) {

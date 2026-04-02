@@ -1,6 +1,5 @@
 <?php
 require_once('UsuarioModelo.php');
-require_once('../mjolnir/seguridad.php');
 
 class UsuarioControlador {
 
@@ -59,7 +58,7 @@ class UsuarioControlador {
             return ['success' => false, 'message' => 'No se recibió el ID del usuario'];
         }
 
-        $validacion = Seguridad::validarUsuarioParcial($datos);
+        $validacion = Seguridad::validarUsuario($datos);
 
         if (!$validacion['valido']) {
             http_response_code(400);

@@ -1,6 +1,5 @@
 <?php
 require_once('AmbienteModelo.php');
-require_once('../mjolnir/seguridad.php');
 
 class AmbienteControlador {
 

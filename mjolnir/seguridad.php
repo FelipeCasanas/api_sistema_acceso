@@ -1,54 +1,6 @@
 <?php
-header('Content-Type: application/json');
-
 class Seguridad
 {
-    public static function iniciarSesion()
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_set_cookie_params([
-                'httponly' => true,
-                'secure' => false,
-                'samesite' => 'Lax'
-            ]);
-            session_start();
-        }
-
-        if (isset($_SESSION['LAST_ACTIVITY']) && (time() - $_SESSION['LAST_ACTIVITY'] > 1800)) {
-            session_unset();
-            session_destroy();
-        }
-
-        $_SESSION['LAST_ACTIVITY'] = time();
-    }
-
-    public static function proteger()
-    {
-        self::iniciarSesion();
-
-        if (!isset($_SESSION['usuario_id'])) {
-            http_response_code(401);
-            echo json_encode(['error' => 'No autorizado']);
-            exit();
-        }
-    }
-
-    public static function crearSesion($usuario)
-    {
-        self::iniciarSesion();
-        session_regenerate_id(true);
-
-        $_SESSION['usuario_id'] = $usuario['id'];
-        $_SESSION['usuario'] = $usuario['nombre'] ?? '';
-    }
-
-    public static function cerrarSesion()
-    {
-        self::iniciarSesion();
-        session_unset();
-        session_destroy();
-    }
-
     public static function limpiarTexto($texto)
     {
         $texto = trim($texto);
@@ -81,156 +33,123 @@ class Seguridad
         return mb_strlen($texto, 'UTF-8') == $longitud;
     }
 
-    public static function validarUsuario($datos, $requerirTodos = true)
+    public static function validarUsuario($datos)
     {
-        $nombre = isset($datos['nombre'])
-            ? self::normalizarEspacios(self::limpiarTexto($datos['nombre']))
-            : null;
+        $nombre = self::normalizarEspacios(self::limpiarTexto($datos['nombre'] ?? ''));
+        $correo = trim(self::limpiarTexto($datos['correo'] ?? ''));
+        $identificacion = self::limpiarTexto($datos['identificacion'] ?? '');
+        $celular = self::limpiarTexto($datos['celular'] ?? '');
+        $tipoIdentificacion = strtoupper(self::limpiarTexto($datos['tipo_identificacion'] ?? ''));
+        $cargo = self::limpiarTexto($datos['cargo'] ?? '');
 
-        $correo = isset($datos['correo'])
-            ? trim(self::limpiarTexto($datos['correo']))
-            : null;
-
-        $identificacion = isset($datos['identificacion'])
-            ? self::limpiarTexto($datos['identificacion'])
-            : null;
-
-        $celular = isset($datos['celular'])
-            ? self::limpiarTexto($datos['celular'])
-            : null;
-
-        $tipoIdentificacion = isset($datos['tipo_identificacion'])
-            ? strtoupper(self::limpiarTexto($datos['tipo_identificacion']))
-            : null;
-
-        $cargo = isset($datos['cargo'])
-            ? self::limpiarTexto($datos['cargo'])
-            : null;
-
-        if ($requerirTodos) {
-            if (
-                empty($nombre) ||
-                empty($correo) ||
-                empty($identificacion) ||
-                empty($celular) ||
-                empty($tipoIdentificacion)
-            ) {
-                return ['valido' => false, 'mensaje' => 'Todos los campos son obligatorios'];
-            }
+        if (
+            empty($nombre) ||
+            empty($correo) ||
+            empty($identificacion) ||
+            empty($celular) ||
+            empty($tipoIdentificacion)
+        ) {
+            return ['valido' => false, 'mensaje' => 'Todos los campos son obligatorios'];
         }
 
-        if ($nombre !== null && !self::soloLetras($nombre)) {
+        if (!self::soloLetras($nombre)) {
             return ['valido' => false, 'mensaje' => 'El nombre solo puede contener letras y espacios'];
         }
 
-        if ($identificacion !== null && !self::soloNumeros($identificacion)) {
+        if (!self::soloNumeros($identificacion)) {
             return ['valido' => false, 'mensaje' => 'La identificación solo debe contener números'];
         }
 
-        if ($celular !== null) {
-            if (!self::soloNumeros($celular) || !self::longitudExacta($celular, 10)) {
-                return ['valido' => false, 'mensaje' => 'El celular debe tener 10 dígitos'];
-            }
+        if (!self::soloNumeros($celular) || !self::longitudExacta($celular, 10)) {
+            return ['valido' => false, 'mensaje' => 'El celular debe tener 10 dígitos'];
         }
 
-        if ($correo !== null && !self::validarEmail($correo)) {
+        if (!self::validarEmail($correo)) {
             return ['valido' => false, 'mensaje' => 'Correo inválido'];
         }
 
         $tiposPermitidos = ['CC', 'TI', 'CE', 'PASAPORTE'];
 
-        if ($tipoIdentificacion !== null && !in_array($tipoIdentificacion, $tiposPermitidos)) {
+        if (!in_array($tipoIdentificacion, $tiposPermitidos)) {
             return ['valido' => false, 'mensaje' => 'Tipo de identificación inválido'];
         }
 
-        $datosLimpios = [];
-
-        if ($nombre !== null)
-            $datosLimpios['nombre'] = $nombre;
-        if ($correo !== null)
-            $datosLimpios['correo'] = $correo;
-        if ($identificacion !== null)
-            $datosLimpios['identificacion'] = $identificacion;
-        if ($celular !== null)
-            $datosLimpios['celular'] = $celular;
-        if ($tipoIdentificacion !== null)
-            $datosLimpios['tipo_identificacion'] = $tipoIdentificacion;
-        if ($cargo !== null)
-            $datosLimpios['cargo'] = $cargo;
-
         return [
             'valido' => true,
-            'datos' => $datosLimpios
+            'datos' => [
+                'nombre' => $nombre,
+                'correo' => $correo,
+                'identificacion' => $identificacion,
+                'celular' => $celular,
+                'tipo_identificacion' => $tipoIdentificacion,
+                'cargo' => $cargo
+            ]
         ];
     }
 
-    public static function validarUsuarioParcial($datos)
+    public static function iniciarSesionSegura()
     {
-        $datosLimpios = [];
+        if (session_status() === PHP_SESSION_NONE) {
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => false,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+            session_start();
+        }
+    }
 
-        if (isset($datos['nombre'])) {
-            $nombre = self::normalizarEspacios(self::limpiarTexto($datos['nombre']));
+    public static function crearSesionUsuario($usuario)
+    {
+        self::iniciarSesionSegura();
+        session_regenerate_id(true);
+        $_SESSION['usuario'] = $usuario;
+        $_SESSION['autenticado'] = true;
+        $_SESSION['LAST_ACTIVITY'] = time();
+    }
 
-            if (!self::soloLetras($nombre)) {
-                return ['valido' => false, 'mensaje' => 'El nombre solo puede contener letras y espacios'];
-            }
+    public static function verificarSesion()
+    {
+        self::iniciarSesionSegura();
 
-            $datosLimpios['nombre'] = $nombre;
+        if (
+            !isset($_SESSION['autenticado']) ||
+            $_SESSION['autenticado'] !== true
+        ) {
+            http_response_code(401);
+            header("Location: http://192.168.18.6/etherium/login.html");
+            exit;
         }
 
-        if (isset($datos['correo'])) {
-            $correo = trim(self::limpiarTexto($datos['correo']));
+        self::controlarExpiracion();
+    }
 
-            if (!self::validarEmail($correo)) {
-                return ['valido' => false, 'mensaje' => 'Correo inválido'];
-            }
+    public static function controlarExpiracion()
+    {
+        $tiempoMaximo = 1800;
 
-            $datosLimpios['correo'] = $correo;
+        if (
+            isset($_SESSION['LAST_ACTIVITY']) &&
+            (time() - $_SESSION['LAST_ACTIVITY']) > $tiempoMaximo
+        ) {
+            session_unset();
+            session_destroy();
+            http_response_code(401);
+            echo json_encode(['error' => 'Sesión expirada']);
+            exit;
         }
 
-        if (isset($datos['identificacion'])) {
-            $identificacion = self::limpiarTexto($datos['identificacion']);
+        $_SESSION['LAST_ACTIVITY'] = time();
+    }
 
-            if (!self::soloNumeros($identificacion)) {
-                return ['valido' => false, 'mensaje' => 'La identificación solo debe contener números'];
-            }
-
-            $datosLimpios['identificacion'] = $identificacion;
-        }
-
-        if (isset($datos['celular'])) {
-            $celular = self::limpiarTexto($datos['celular']);
-
-            if (!self::soloNumeros($celular) || !self::longitudExacta($celular, 10)) {
-                return ['valido' => false, 'mensaje' => 'El celular debe tener 10 dígitos'];
-            }
-
-            $datosLimpios['celular'] = $celular;
-        }
-
-        if (isset($datos['tipo_identificacion'])) {
-            $tipo = strtoupper(self::limpiarTexto($datos['tipo_identificacion']));
-            $tiposPermitidos = ['CC', 'TI', 'CE', 'PASAPORTE'];
-
-            if (!in_array($tipo, $tiposPermitidos)) {
-                return ['valido' => false, 'mensaje' => 'Tipo de identificación inválido'];
-            }
-
-            $datosLimpios['tipo_identificacion'] = $tipo;
-        }
-
-        if (isset($datos['cargo'])) {
-            $datosLimpios['cargo'] = self::limpiarTexto($datos['cargo']);
-        }
-
-        if (empty($datosLimpios)) {
-            return ['valido' => false, 'mensaje' => 'No se enviaron datos para actualizar'];
-        }
-
-        return [
-            'valido' => true,
-            'datos' => $datosLimpios
-        ];
+    public static function cerrarSesion()
+    {
+        self::iniciarSesionSegura();
+        session_unset();
+        session_destroy();
     }
 }
 ?>

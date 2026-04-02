@@ -3,9 +3,9 @@ date_default_timezone_set('America/Bogota');
 
 function obtenerConexion() {
     $host = '127.0.0.1';
-    $dbname = 'u267461442_etherium';
-    $usuario = 'u267461442_etherium_root';
-    $contrasena = '300Saldo300';
+    $dbname = 'etherium';
+    $usuario = 'felipe';
+    $contrasena = '1324';
 
     $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
 

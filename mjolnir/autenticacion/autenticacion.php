@@ -1,11 +1,9 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost'); // ajusta a tu dominio
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, POST, DELETE');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Origin: http://54.156.114.70:63001');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type');
 
-require_once('../seguridad.php');
 require_once('AuthControlador.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -13,16 +11,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-Seguridad::iniciarSesion();
+session_start();
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 $datos = json_decode(file_get_contents("php://input"), true) ?? [];
 
 switch ($metodo) {
     case 'GET':
-        echo json_encode(AuthControlador::verificarSesion());
+        echo json_encode(AuthControlador::verificarSesion($datos));
         break;
-
+        
     case 'POST':
         echo json_encode(AuthControlador::login($datos));
         break;

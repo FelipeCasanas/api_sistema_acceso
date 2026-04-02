@@ -1,6 +1,5 @@
 <?php
 require_once('PermisoModelo.php');
-require_once('../mjolnir/seguridad.php');
 
 class PermisoControlador {
 
@@ -30,6 +29,7 @@ class PermisoControlador {
             'id_usuario',
             'tipo_permiso',
             'descripcion',
+            'comprobante',
             'estado'
         ];
 

@@ -2,15 +2,19 @@
 require_once('../conexion/conectar.php');
 require_once('../seguridad.php');
 
-class AuthModelo
-{
+class AuthModelo {
 
-    public static function verificarSesion()
-    {
+    public static function verificarSesion() {
 
-        Seguridad::iniciarSesion();
+        Seguridad::iniciarSesionSegura();
 
-        if (empty($_SESSION['usuario'])) {
+        Seguridad::controlarExpiracion();
+
+        if (
+            empty($_SESSION['usuario']) ||
+            !isset($_SESSION['autenticado']) ||
+            $_SESSION['autenticado'] !== true
+        ) {
             http_response_code(401);
             return [
                 'success' => false,
@@ -25,10 +29,9 @@ class AuthModelo
         ];
     }
 
-    public static function login($identificacion, $android_id, $nombre_dispositivo)
-    {
+    public static function login($identificacion, $android_id, $nombre_dispositivo) {
 
-        Seguridad::iniciarSesion();
+        Seguridad::iniciarSesionSegura();
 
         $conexion = obtenerConexion();
 
@@ -77,24 +80,45 @@ class AuthModelo
             }
         }
 
-        Seguridad::crearSesion($usuario);
+        session_regenerate_id(true);
+
+        $_SESSION['usuario'] = [
+            'id' => $usuario['id'],
+            'nombre' => $usuario['nombre'],
+            'identificacion' => $usuario['identificacion'],
+            'cargo' => $usuario['cargo']
+        ];
+
+        $_SESSION['autenticado'] = true;
+        $_SESSION['LAST_ACTIVITY'] = time();
 
         return [
             'success' => true,
             'message' => 'Inicio de sesión exitoso',
-            'data' => [
-                'id' => $usuario['id'],
-                'nombre' => $_SESSION['usuario'],
-                'cargo' => $usuario['cargo']
-            ],
-            'session_token' => session_id()
+            'data' => $_SESSION['usuario']
         ];
     }
 
-    public static function logout()
-    {
+    public static function logout() {
 
-        Seguridad::cerrarSesion();
+        Seguridad::iniciarSesionSegura();
+
+        $_SESSION = [];
+
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(),
+                '',
+                time() - 42000,
+                $params["path"],
+                $params["domain"],
+                $params["secure"],
+                $params["httponly"]
+            );
+        }
+
+        session_destroy();
 
         return [
             'success' => true,
